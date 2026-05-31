@@ -15,7 +15,7 @@ function PasswordStrength() {
     const isStrong = (password?.length ?? 0) >= 8
 
     return (
-        <p className="absolute right-9 top-[54%] -translate-y-1/2 text-[10px] leading-none">
+        <p className="absolute right-9 top-[46%] -translate-y-1/2 text-[10px] leading-none">
             {!isEmpty && (
                 <span className={isStrong ? "text-green-600 pt-1" : "text-red-500 pt-1"}>
                     {isStrong ? "Strong" : "Weak"}
