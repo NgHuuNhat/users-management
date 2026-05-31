@@ -45,11 +45,17 @@ export default function RegisterPage() {
                             Register
                         </h1>
 
-                        <FormInput
-                            label="Email"
-                            name="email"
-                            placeholder="Enter email"
-                        />
+
+                        <div className="">
+                            <FormInput
+                                label="Email"
+                                name="email"
+                                placeholder="Enter email"
+                            />
+                            <p className="mt-1 text-[10px] leading-none text-gray-400">
+                                Example: example@gmail.com
+                            </p>
+                        </div>
 
                         <div className="relative">
                             <PasswordInput
@@ -58,6 +64,9 @@ export default function RegisterPage() {
                                 placeholder="Enter password"
                             />
                             <PasswordStrength />
+                            <p className="mt-1 text-[10px] leading-none text-gray-400">
+                                8+ characters, uppercase, lowercase and number
+                            </p>
                         </div>
 
 
