@@ -1,4 +1,5 @@
-# users-management
+# project: users-management
+# Task:
 User Register/Update:
  create account:
  - email (validate email)
@@ -44,14 +45,8 @@ Detail User:
  - socialsFB
  - socialsTW
 
-
-*** 
-Data input from register form
-
-# Tech Stack
-
+# Tech Stack:
 ## Frontend
-
 * Next.js (App Router)
 * ReactJS
 * TypeScript
@@ -59,23 +54,19 @@ Data input from register form
 * shadcn/ui
 
 ## Form & Validation
-
 * React Hook Form
 * Zod
 
 ## State Management
-
 * Zustand
 * TanStack Query
 
 ## Backend & Database
-
 * Firebase Auth
 * Firestore Database
 * Firebase Storage
 
 ## Optimization & Performance
-
 * React.memo
 * useMemo
 * useCallback
