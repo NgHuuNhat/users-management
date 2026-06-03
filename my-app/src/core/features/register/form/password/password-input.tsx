@@ -2,8 +2,7 @@
 
 import { useState } from "react"
 import { Eye, EyeOff } from "lucide-react"
-import FormInput from "./form-input"
-import PasswordStrength from "./password-strength"
+import FormInput from "../form-input"
 
 export default function PasswordInput(props: any) {
     const [show, setShow] = useState(false)

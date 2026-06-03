@@ -5,11 +5,13 @@ import {
   Path,
   useFormContext,
 } from "react-hook-form"
+import CaptchaDisplay from "./captcha-display"
 
 type CaptchaInputProps<T extends FieldValues> = {
   label: string
   name: Path<T>
   captchaText: string
+  onRefresh: () => void
   placeholder?: string
 }
 
@@ -17,6 +19,7 @@ export default function CaptchaInput<T extends FieldValues>({
   label,
   name,
   captchaText,
+  onRefresh,
   placeholder,
 }: CaptchaInputProps<T>) {
   const {
@@ -34,11 +37,7 @@ export default function CaptchaInput<T extends FieldValues>({
       </label>
 
       {/* Captcha Display */}
-      <div className="flex items-center justify-center rounded-md border bg-gray-100 p-4">
-        <span className="select-none text-xl font-bold tracking-[6px]">
-          {captchaText}
-        </span>
-      </div>
+      <CaptchaDisplay captchaText={captchaText} onRefresh={onRefresh} />
 
       {/* Input */}
       <input

@@ -6,17 +6,23 @@ import { zodResolver } from "@hookform/resolvers/zod"
 import {
     registerSchema,
     RegisterSchemaType,
-} from "@/schemas/register.schema"
+} from "@/core/features/register/schemas/register.schema"
 
-import FormInput from "@/components/forms/form-input"
-import PasswordInput from "@/components/forms/password-input"
-import CaptchaInput from "@/components/forms/captcha-input"
-import PasswordStrength from "@/components/forms/password-strength"
-import PasswordMatch from "@/components/forms/password-match"
+import { useCaptcha } from "@/core/features/register/form/captcha/hooks/use-captcha"
+import FormInput from "@/core/features/register/form/form-input"
+import CaptchaInput from "@/core/features/register/form/captcha/captcha-input"
+import PasswordInput from "@/core/features/register/form/password/password-input"
+import PasswordStrength from "@/core/features/register/form/password/password-strength"
+import PasswordMatch from "@/core/features/register/form/password/password-match"
 
 export default function RegisterPage() {
+    // const captchaText = "ABCD1234"
+    const { captchaText, refreshCaptcha, } = useCaptcha()
+
     const methods = useForm<RegisterSchemaType>({
-        resolver: zodResolver(registerSchema),
+        resolver: zodResolver(
+            registerSchema(captchaText)
+        ),
         defaultValues: {
             email: "",
             password: "",
@@ -26,8 +32,6 @@ export default function RegisterPage() {
     })
 
     const { handleSubmit } = methods
-
-    const captchaText = "ABCD1234"
 
     const onSubmit = (data: RegisterSchemaType) => {
         console.log(data)
@@ -45,8 +49,7 @@ export default function RegisterPage() {
                             Register
                         </h1>
 
-
-                        <div className="">
+                        <div>
                             <FormInput
                                 label="Email"
                                 name="email"
@@ -69,7 +72,6 @@ export default function RegisterPage() {
                             </p>
                         </div>
 
-
                         <div className="relative">
                             <PasswordInput
                                 label="Confirm Password"
@@ -83,6 +85,7 @@ export default function RegisterPage() {
                             label="Captcha"
                             name="captcha"
                             captchaText={captchaText}
+                            onRefresh={refreshCaptcha}
                             placeholder="Enter captcha"
                         />
 
