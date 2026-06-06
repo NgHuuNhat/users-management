@@ -1,48 +1,24 @@
 import { z } from "zod"
 
-const registerBaseSchema = z.object({
-  email: z
-    .email("Invalid email"),
+export const registerSchema = (expectedCaptcha: string) => 
+    z.object({
+        email: z.string().email("Email không hợp lệ"),
+        password: z
+            .string()
+            .min(8, "Mật khẩu phải có ít nhất 8 ký tự")
+            .regex(/[a-z]/, "Phải chứa chữ thường")
+            .regex(/[A-Z]/, "Phải chứa chữ hoa")
+            .regex(/[0-9]/, "Phải chứa số"),
+        confirmPassword: z.string(),
+        captcha: z.string().min(1, "Vui lòng nhập mã xác nhận"),
+    })
+    .refine((data) => data.password === data.confirmPassword, {
+        message: "Mật khẩu xác nhận không khớp",
+        path: ["confirmPassword"],
+    })
+    .refine((data) => data.captcha === expectedCaptcha, {
+        message: "Mã xác nhận không chính xác",
+        path: ["captcha"],
+    })
 
-  password: z
-    .string()
-    .min(
-      8,
-      "Password must be at least 8 characters"
-    )
-    .regex(
-      /^(?=.*[a-z])(?=.*[A-Z])(?=.*\d).+$/,
-      "Password must contain uppercase, lowercase and number"
-    ),
-
-  confirmPassword: z.string(),
-
-  captcha: z
-    .string()
-    .length(
-      8,
-      "Captcha must be 8 characters"
-    ),
-})
-
-export type RegisterSchemaType =
-  z.infer<typeof registerBaseSchema>
-
-export const registerSchema = (captchaText: string) => registerBaseSchema
-  .refine(
-    (data) =>
-      data.password ===
-      data.confirmPassword,
-    {
-      path: ["confirmPassword"],
-      message: "Passwords do not match",
-    }
-  )
-
-  .refine(
-    (data) => data.captcha === captchaText,
-    {
-      path: ["captcha"],
-      message: "Invalid captcha",
-    }
-  )
+export type RegisterSchemaType = z.infer<ReturnType<typeof registerSchema>>
