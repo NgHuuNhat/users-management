@@ -17,16 +17,23 @@ export default function Home() {
         <div className="flex w-full flex-col gap-4">
           <Link
             href="/register"
-            className="flex h-12 items-center justify-center rounded-xl bg-black font-medium text-white transition hover:opacity-90"
+            className="flex h-12 items-center justify-center rounded-xl border border-zinc-200 bg-white font-medium text-black transition hover:bg-zinc-50"
           >
             Create Account
           </Link>
 
           <Link
-            href="/login"
+            href="#"
             className="flex h-12 items-center justify-center rounded-xl border border-zinc-200 bg-white font-medium text-black transition hover:bg-zinc-50"
           >
             Login
+          </Link>
+
+          <Link
+            href="/checkout"
+            className="flex h-12 items-center justify-center rounded-xl border border-zinc-200 bg-white font-medium text-black transition hover:bg-zinc-50"
+          >
+            Checkout
           </Link>
         </div>
       </div>

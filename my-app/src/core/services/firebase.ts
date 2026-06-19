@@ -19,13 +19,18 @@ const firebaseConfig = {
   measurementId: "G-4PKWWMEQL8"
 };
 
-// Initialize Firebase
+// Initialize Firebase server
 const app = initializeApp(firebaseConfig);
-const analytics = getAnalytics(app);
-
 // Initialize Firebase Authentication and get a reference to the service
 export const auth = getAuth(app)
 export const db = getFirestore(app)
 export const storage = getStorage(app)
+
+// Initialize Firebase client (analytics)
+// const analytics = getAnalytics(app);
+// export const analytics =
+//   typeof window !== "undefined"
+//     ? getAnalytics(app)
+//     : null;
 
 export default app
