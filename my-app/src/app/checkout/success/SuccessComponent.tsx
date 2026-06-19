@@ -32,7 +32,6 @@ export default function SuccessComponent() {
   const [transactionId, setTransactionId] = useState<string | null>(null);
   const [paidAt, setPaidAt] = useState<number | null>(null);
 
-  // BANK INFO
   const [bankName, setBankName] = useState<string | null>(null);
   const [accountNumber, setAccountNumber] = useState<string | null>(null);
   const [accountName, setAccountName] = useState<string | null>(null);
@@ -60,7 +59,6 @@ export default function SuccessComponent() {
     fetchOrder();
   }, [orderId]);
 
-  // 👉 GỘP NGƯỜI NHẬN (BANK INFO)
   const receiverInfo =
     bankName && accountNumber && accountName
       ? `${bankName} - ${accountNumber} - ${accountName}`
@@ -85,27 +83,30 @@ export default function SuccessComponent() {
     <div className="flex min-h-screen items-center justify-center bg-white p-6">
       <div className="w-full max-w-md text-center">
 
-        {/* Icon */}
-        <div className="mx-auto mb-6 flex h-16 w-16 items-center justify-center rounded-full border text-3xl">
+        {/* ICON + VERIFIED */}
+        <div className="mx-auto mb-5 flex h-16 w-16 items-center justify-center rounded-full border border-green-200 bg-green-50 text-green-600 text-3xl shadow-sm">
           ✓
         </div>
 
-        {/* Title */}
-        <h1 className="text-3xl font-semibold text-black">
+        {/* TITLE (GOLD) */}
+        <h1 className="text-3xl font-bold text-yellow-500">
           Thanh toán thành công
         </h1>
 
-        <p className="mt-3 text-gray-500">
+        <p className="mt-2 text-4xl font-extrabold text-green-600 tracking-wide">
+          {amount ? formatMoney(amount) : ".."}
+        </p>
+
+        <p className="mt-2 flex items-center justify-center gap-1 text-gray-500">
           Đơn hàng đã được xác nhận
         </p>
 
-        {/* CORE INFO */}
+        {/* INFO */}
         <div className="mt-6 space-y-3 text-left">
-
-          <Item
+          {/* <Item
             label="Số tiền"
             value={amount ? formatMoney(amount) : ".."}
-          />
+          /> */}
 
           <Item label="Người nhận" value={receiverInfo} />
 
@@ -116,10 +117,10 @@ export default function SuccessComponent() {
           <Item label="Thời gian" value={formatTime(paidAt)} />
         </div>
 
-        {/* Button */}
+        {/* BUTTON */}
         <button
           onClick={() => (window.location.href = "/")}
-          className="cursor-pointer mt-6 w-full rounded-2xl bg-black py-3 font-medium text-white hover:opacity-80"
+          className="mt-6 w-full cursor-pointer rounded-2xl bg-black py-3 font-medium text-white hover:opacity-80"
         >
           Về trang chủ
         </button>
