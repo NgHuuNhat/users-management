@@ -119,7 +119,7 @@ export default function SuccessComponent() {
         {/* Button */}
         <button
           onClick={() => (window.location.href = "/")}
-          className="mt-6 w-full rounded-2xl bg-black py-3 font-medium text-white hover:opacity-80"
+          className="cursor-pointer mt-6 w-full rounded-2xl bg-black py-3 font-medium text-white hover:opacity-80"
         >
           Về trang chủ
         </button>
