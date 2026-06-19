@@ -14,12 +14,12 @@ export async function POST(req: NextRequest) {
 
     // 2. Tách mã đơn hàng bằng Regex linh hoạt (bỏ qua khoảng trắng/gạch dưới, không phân biệt hoa thường)
     const match = content.match(/ORDER_?(\w+)/i);
-    
+
     if (!match) {
       console.log("❌ Không tìm thấy mã đơn hàng trong nội dung:", content);
       return NextResponse.json({ success: false, message: "Invalid order code" });
     }
-    
+
     const orderId = match[1];
     console.log("✅ Order ID bóc tách được:", orderId);
 
@@ -42,12 +42,13 @@ export async function POST(req: NextRequest) {
         transactionId: txId,
         amountReceived: body.transferAmount, // Rất nên lưu lại số tiền thực tế khách đã chuyển
         gateway: body.gateway || "Manual",   // Lưu lại ngân hàng/cổng thanh toán (VietinBank)
+        rawContent: content,                 // 🌟 LƯU THÊM: Nội dung chuyển khoản gốc từ ngân hàng
       }
     );
 
     console.log("✅ Đã cập nhật đơn hàng thành công!");
     return NextResponse.json({ success: true });
-    
+
   } catch (err: any) {
     console.error("❌ Lỗi Webhook:", err);
     return NextResponse.json(
