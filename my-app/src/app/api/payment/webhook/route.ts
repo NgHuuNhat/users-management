@@ -5,48 +5,71 @@ import {
 } from "firebase/firestore";
 import { db } from "@/core/services/firebase";
 
-export async function POST(req: NextRequest) {
+// export async function POST(req: NextRequest) {
+//   try {
+//     const body = await req.json();
+
+//     console.log("Webhook called");
+//     console.log(body);
+
+//     const content =
+//       body.content ||
+//       body.transferContent ||
+//       "";
+
+//     const match = content.match(/ORDER_(\w+)/);
+//     if (!match) {
+//       return NextResponse.json({
+//         success: false,
+//       });
+//     }
+//     const orderId = match[1];
+
+//     await updateDoc(
+//       doc(db, "orders", orderId),
+//       {
+//         status: "paid",
+//         paidAt: Date.now(),
+//         transactionId:
+//           body.id ||
+//           body.transactionId,
+//       }
+//     );
+
+//     return NextResponse.json({
+//       success: true,
+//     });
+//   } catch (err: any) {
+//     return NextResponse.json(
+//       {
+//         success: false,
+//         message: err.message,
+//       },
+//       { status: 500 }
+//     );
+//   }
+// }
+
+
+export async function POST(req: Request) {
   try {
-    const body = await req.json();
+    const raw = await req.text()
 
-    console.log("Webhook called");
-    console.log(body);
+    console.log("🔥 RAW BODY:", raw)
 
-    const content =
-      body.content ||
-      body.transferContent ||
-      "";
-
-    const match = content.match(/ORDER_(\w+)/);
-    if (!match) {
-      return NextResponse.json({
-        success: false,
-      });
+    let body
+    try {
+      body = JSON.parse(raw)
+    } catch (e) {
+      console.log("❌ NOT JSON")
     }
-    const orderId = match[1];
 
-    await updateDoc(
-      doc(db, "orders", orderId),
-      {
-        status: "paid",
-        paidAt: Date.now(),
-        transactionId:
-          body.id ||
-          body.transactionId,
-      }
-    );
+    console.log("🔥 PARSED:", body)
 
-    return NextResponse.json({
-      success: true,
-    });
-  } catch (err: any) {
-    return NextResponse.json(
-      {
-        success: false,
-        message: err.message,
-      },
-      { status: 500 }
-    );
+    return NextResponse.json({ success: true })
+  } catch (err) {
+    console.log("🔥 WEBHOOK ERROR:", err)
+    return NextResponse.json({ success: false })
   }
 }
 
