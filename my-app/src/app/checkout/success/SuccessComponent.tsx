@@ -5,7 +5,13 @@ import { useEffect, useState } from "react";
 import { doc, getDoc } from "firebase/firestore";
 import { db } from "@/core/services/firebase";
 
-function formatPaidAt(timestamp: number | Date) {
+function formatMoney(amount: number) {
+  return new Intl.NumberFormat("vi-VN").format(amount) + "₫";
+}
+
+function formatTime(timestamp: number | Date | null) {
+  if (!timestamp) return "..";
+
   const date = new Date(timestamp);
 
   const hours = date.getHours().toString().padStart(2, "0");
@@ -15,22 +21,18 @@ function formatPaidAt(timestamp: number | Date) {
   const month = (date.getMonth() + 1).toString().padStart(2, "0");
   const year = date.getFullYear();
 
-  return `Đã thanh toán lúc ${hours}:${minutes} - ${day}/${month}/${year}`;
-}
-
-function formatMoney(amount: number) {
-  return new Intl.NumberFormat("vi-VN").format(amount) + "₫";
+  return `${hours}:${minutes} - ${day}/${month}/${year}`;
 }
 
 export default function SuccessComponent() {
   const searchParams = useSearchParams();
   const orderId = searchParams.get("orderId");
 
-  const [paidAt, setPaidAt] = useState<number | null>(null);
   const [amount, setAmount] = useState<number | null>(null);
-  const [gateway, setGateway] = useState<string | null>(null);
+  const [sender, setSender] = useState<string | null>(null);
+  const [receiver, setReceiver] = useState<string | null>(null);
   const [transactionId, setTransactionId] = useState<string | null>(null);
-  const [rawContent, setRawContent] = useState<string | null>(null);
+  const [paidAt, setPaidAt] = useState<number | null>(null);
 
   useEffect(() => {
     if (!orderId) return;
@@ -42,16 +44,31 @@ export default function SuccessComponent() {
       if (snap.exists()) {
         const data = snap.data();
 
-        setPaidAt(data.paidAt || null);
         setAmount(data.amountReceived || null);
-        setGateway(data.gateway || null);
+        setSender(data.sender || data.senderName || null);
+        setReceiver(data.receiver || "Cửa hàng của bạn");
         setTransactionId(data.transactionId || null);
-        setRawContent(data.rawContent || null);
+        setPaidAt(data.paidAt || null);
       }
     };
 
     fetchOrder();
   }, [orderId]);
+
+  const Item = ({
+    label,
+    value,
+  }: {
+    label: string;
+    value: string | number | null | undefined;
+  }) => (
+    <div className="rounded-xl border p-4 text-left">
+      <p className="text-sm text-gray-500">{label}</p>
+      <p className="break-all font-mono text-sm text-black">
+        {value ?? ".."}
+      </p>
+    </div>
+  );
 
   return (
     <div className="flex min-h-screen items-center justify-center bg-white p-6">
@@ -68,66 +85,32 @@ export default function SuccessComponent() {
         </h1>
 
         <p className="mt-3 text-gray-500">
-          Cảm ơn bạn! Đơn hàng của bạn đang được chuẩn bị...
+          Đơn hàng của bạn đã được ghi nhận
         </p>
 
-        {/* Paid time */}
-        {paidAt && (
-          <p className="mt-4 text-sm font-medium text-green-600">
-            {formatPaidAt(paidAt)}
-          </p>
-        )}
+        {/* CORE INFO */}
+        <div className="mt-6 space-y-3 text-left">
 
-        {/* Amount */}
-        {amount && (
-          <div className="mt-6 rounded-xl border p-4 text-left">
-            <p className="text-sm text-gray-500">Số tiền đã thanh toán</p>
-            <p className="font-semibold text-black">
-              {formatMoney(amount)}
-            </p>
-          </div>
-        )}
+          <Item
+            label="Số tiền"
+            value={amount ? formatMoney(amount) : ".."}
+          />
 
-        {/* Gateway */}
-        {gateway && (
-          <div className="mt-3 rounded-xl border p-4 text-left">
-            <p className="text-sm text-gray-500">Cổng thanh toán</p>
-            <p className="font-semibold text-black">{gateway}</p>
-          </div>
-        )}
+          <Item label="Người gửi" value={sender} />
 
-        {/* Transaction ID */}
-        {transactionId && (
-          <div className="mt-3 rounded-xl border p-4 text-left">
-            <p className="text-sm text-gray-500">Mã tham chiếu giao dịch</p>
-            <p className="break-all font-mono text-sm text-black">
-              {transactionId}
-            </p>
-          </div>
-        )}
+          <Item label="Người nhận" value={receiver} />
 
-        {/* Raw content */}
-        {rawContent && (
-          <div className="mt-3 rounded-xl border p-4 text-left">
-            <p className="text-sm text-gray-500">Nội dung chuyển khoản</p>
-            <p className="break-all font-mono text-sm text-black">
-              {rawContent}
-            </p>
-          </div>
-        )}
+          <Item label="Mã giao dịch" value={transactionId} />
 
-        {/* Order ID */}
-        <div className="mt-8 rounded-2xl border p-4">
-          <p className="text-sm text-gray-500">Mã đơn hàng</p>
-          <p className="mt-1 break-all font-mono text-sm text-black">
-            {orderId}
-          </p>
+          <Item label="Mã đơn hàng" value={orderId} />
+
+          <Item label="Thời gian" value={formatTime(paidAt)} />
         </div>
 
-        {/* Home button */}
+        {/* Button */}
         <button
           onClick={() => (window.location.href = "/")}
-          className="mt-6 w-full rounded-2xl bg-black py-3 font-medium text-white transition-opacity hover:opacity-80"
+          className="mt-6 w-full rounded-2xl bg-black py-3 font-medium text-white hover:opacity-80"
         >
           Về trang chủ
         </button>
