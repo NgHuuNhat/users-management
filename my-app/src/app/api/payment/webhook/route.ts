@@ -1,9 +1,9 @@
-import { NextRequest, NextResponse } from "next/server";
-import {
-  doc,
-  updateDoc,
-} from "firebase/firestore";
-import { db } from "@/core/services/firebase";
+// import { NextRequest, NextResponse } from "next/server";
+// import {
+//   doc,
+//   updateDoc,
+// } from "firebase/firestore";
+// import { db } from "@/core/services/firebase";
 
 // export async function POST(req: NextRequest) {
 //   try {
