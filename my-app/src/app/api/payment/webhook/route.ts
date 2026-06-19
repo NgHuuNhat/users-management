@@ -1,56 +1,90 @@
 import { NextRequest, NextResponse } from "next/server";
-import { doc, updateDoc } from "firebase/firestore";
+import { doc, getDoc, updateDoc } from "firebase/firestore";
 import { db } from "@/core/services/firebase";
+import crypto from "crypto"; // Thư viện mã hóa có sẵn của Node.js
+
+const SEPAY_WEBHOOK_SECRET = process.env.SEPAY_WEBHOOK_SECRET;
 
 export async function POST(req: NextRequest) {
   try {
-    const body = await req.json();
+    // 1. Lấy chữ ký từ Header do SePay gửi sang
+    const sepaySignature = req.headers.get("x-sepay-signature");
 
-    console.log("========== SePay Webhook Called ==========");
-    console.log("Payload:", body);
+    // 2. Đọc toàn bộ Body dưới dạng TEXT thuần (Bắt buộc để tính toán HMAC)
+    const rawBody = await req.text();
 
-    // 1. Lấy nội dung chuyển khoản: Ưu tiên 'content' (SePay Prod), fallback về 'transferContent' (Local test)
-    const content = body.content || body.transferContent || "";
+    console.log("========== SePay HMAC Webhook Called ==========");
 
-    // 2. Tách mã đơn hàng bằng Regex linh hoạt (bỏ qua khoảng trắng/gạch dưới, không phân biệt hoa thường)
-    const match = content.match(/ORDER_?(\w+)/i);
+    // 🛡️ BẢO MẬT: Kiểm tra HMAC-SHA256 (Chỉ chạy khi đã cấu hình SECRET)
+    if (SEPAY_WEBHOOK_SECRET) {
+      if (!sepaySignature) {
+        console.error("❌ Cảnh báo: Request thiếu chữ ký bảo mật!");
+        return NextResponse.json({ success: false, message: "Missing signature" }, { status: 401 });
+      }
 
-    if (!match) {
-      console.log("❌ Không tìm thấy mã đơn hàng trong nội dung:", content);
-      return NextResponse.json({ success: false, message: "Invalid order code" });
+      // Tự tính toán lại chữ ký bằng Secret Key của bạn
+      const computedSignature = crypto
+        .createHmac("sha256", SEPAY_WEBHOOK_SECRET)
+        .update(rawBody)
+        .digest("hex"); // SePay trả về chuỗi mã hóa dạng Hex
+
+      // So khớp chữ ký của hệ thống và chữ ký SePay gửi sang
+      if (sepaySignature !== computedSignature) {
+        console.error("❌ Cảnh báo: Chữ ký không trùng khớp! Payload có thể đã bị giả mạo.");
+        return NextResponse.json({ success: false, message: "Invalid signature" }, { status: 401 });
+      }
+      console.log("🔒 Xác thực HMAC thành công! Dữ liệu an toàn.");
     }
 
-    const orderId = match[1];
-    console.log("✅ Order ID bóc tách được:", orderId);
+    // 3. Sau khi xác thực an toàn, tiến hành parse TEXT thành JSON để xử lý tiếp
+    const body = JSON.parse(rawBody);
+    const content = body.content || body.transferContent || "";
 
-    // 3. Lọc Giao dịch: Đảm bảo đây là giao dịch tiền vào (transferType = "in")
-    // Tránh trường hợp tiền ra (out) hệ thống cũng nhầm là thanh toán đơn hàng
+    // Tách mã đơn hàng
+    const match = content.match(/ORDER_?(\w+)/i);
+    if (!match) {
+      return NextResponse.json({ success: false, message: "Invalid order code" });
+    }
+    const orderId = match[1];
+
+    // Lọc giao dịch tiền vào
     if (body.transferType && body.transferType !== "in") {
       return NextResponse.json({ success: true, message: "Ignored outgoing transaction" });
     }
 
-    // 4. Lấy Mã giao dịch (Transaction ID)
-    // Ưu tiên referenceCode (Mã của VietinBank) -> id (Của SePay) -> transactionId (Local Test)
+    // Kiểm tra đơn hàng trong Firestore
+    const orderRef = doc(db, "orders", orderId);
+    const orderSnap = await getDoc(orderRef);
+
+    if (!orderSnap.exists()) {
+      return NextResponse.json({ success: false, message: "Order not found" });
+    }
+
+    const orderData = orderSnap.data();
+    const transferAmount = Number(body.transferAmount);
+
+    // Kiểm tra số tiền khách chuyển
+    if (transferAmount < orderData.totalPrice) {
+      console.log(`⚠️ Đơn ${orderId} thiếu tiền. Cần: ${orderData.totalPrice}, Nhận: ${transferAmount}`);
+      return NextResponse.json({ success: true, message: "Underpaid" });
+    }
+
     const txId = body.referenceCode || String(body.id) || body.transactionId;
 
-    // 5. Cập nhật vào Firestore
-    await updateDoc(
-      doc(db, "orders", orderId),
-      {
-        status: "paid",
-        paidAt: Date.now(),
-        transactionId: txId,
-        amountReceived: body.transferAmount, // Rất nên lưu lại số tiền thực tế khách đã chuyển
-        gateway: body.gateway || "Manual",   // Lưu lại ngân hàng/cổng thanh toán (VietinBank)
-        rawContent: content,                 // 🌟 LƯU THÊM: Nội dung chuyển khoản gốc từ ngân hàng
-      }
-    );
+    // Tiến hành gạch nợ đơn hàng
+    await updateDoc(orderRef, {
+      status: "paid",
+      paidAt: Date.now(),
+      transactionId: txId,
+      amountReceived: transferAmount,
+      gateway: body.gateway || "Manual",
+      rawContent: content,
+    });
 
-    console.log("✅ Đã cập nhật đơn hàng thành công!");
     return NextResponse.json({ success: true });
-
+    
   } catch (err: any) {
-    console.error("❌ Lỗi Webhook:", err);
+    console.error("❌ Lỗi hệ thống:", err);
     return NextResponse.json(
       { success: false, message: err.message },
       { status: 500 }
