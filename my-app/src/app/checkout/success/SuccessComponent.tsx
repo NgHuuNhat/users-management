@@ -29,10 +29,13 @@ export default function SuccessComponent() {
   const orderId = searchParams.get("orderId");
 
   const [amount, setAmount] = useState<number | null>(null);
-  const [sender, setSender] = useState<string | null>(null);
-  const [receiver, setReceiver] = useState<string | null>(null);
   const [transactionId, setTransactionId] = useState<string | null>(null);
   const [paidAt, setPaidAt] = useState<number | null>(null);
+
+  // BANK INFO
+  const [bankName, setBankName] = useState<string | null>(null);
+  const [accountNumber, setAccountNumber] = useState<string | null>(null);
+  const [accountName, setAccountName] = useState<string | null>(null);
 
   useEffect(() => {
     if (!orderId) return;
@@ -45,15 +48,23 @@ export default function SuccessComponent() {
         const data = snap.data();
 
         setAmount(data.amountReceived || null);
-        setSender(data.sender || data.senderName || null);
-        setReceiver(data.receiver || "Cửa hàng của bạn");
         setTransactionId(data.transactionId || null);
         setPaidAt(data.paidAt || null);
+
+        setBankName(data.bank?.name || null);
+        setAccountNumber(data.bank?.accountNumber || null);
+        setAccountName(data.bank?.accountName || null);
       }
     };
 
     fetchOrder();
   }, [orderId]);
+
+  // 👉 GỘP NGƯỜI NHẬN (BANK INFO)
+  const receiverInfo =
+    bankName && accountNumber && accountName
+      ? `${bankName} - ${accountNumber} - ${accountName}`
+      : accountName || "..";
 
   const Item = ({
     label,
@@ -85,7 +96,7 @@ export default function SuccessComponent() {
         </h1>
 
         <p className="mt-3 text-gray-500">
-          Đơn hàng của bạn đã được ghi nhận
+          Đơn hàng đã được xác nhận
         </p>
 
         {/* CORE INFO */}
@@ -96,9 +107,7 @@ export default function SuccessComponent() {
             value={amount ? formatMoney(amount) : ".."}
           />
 
-          <Item label="Người gửi" value={sender} />
-
-          <Item label="Người nhận" value={receiver} />
+          <Item label="Người nhận" value={receiverInfo} />
 
           <Item label="Mã giao dịch" value={transactionId} />
 

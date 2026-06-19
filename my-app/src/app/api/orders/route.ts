@@ -19,17 +19,15 @@ export async function POST(req: NextRequest) {
         createdAt: serverTimestamp(),
         paidAt: null,
         transactionId: null,
+        bank: {
+          name: "VietinBank",
+          accountNumber: "106885114966",
+          accountName: "NGUYEN HUU NHAT",
+        },
       }
     );
 
     const orderId = orderRef.id;
-
-    //techcombank
-    // const qrUrl =
-    //   "https://img.vietqr.io/image/TCB-5678200901-compact2.png" +
-    //   `?amount=${body.amount}` +
-    //   `&addInfo=ORDER_${orderId}` +
-    //   `&accountName=NGUYEN%20HUU%20NHAT`;
 
     //vietinbank
     const qrUrl =
