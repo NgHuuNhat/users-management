@@ -3,139 +3,126 @@ import crypto from 'crypto';
 import { doc, getDoc, updateDoc, serverTimestamp } from 'firebase/firestore';
 import { db } from '@/core/services/firebase';
 
-// Lấy Secret Key từ biến môi trường
-const SEPAY_SECRET = process.env.SEPAY_WEBHOOK_SECRET!;
+const SECRET = process.env.SEPAY_WEBHOOK_SECRET!;
+if (!SECRET) throw new Error('Thiếu SEPAY_WEBHOOK_SECRET');
 
-console.log("SEPAY_SECRET:", SEPAY_SECRET);
+const ORDER_REGEX = /SEVQR\s*ORDER\s*([A-Za-z0-9]+)/i;
 
-if (!SEPAY_SECRET) {
-    throw new Error("Missing SEPAY_WEBHOOK_SECRET in environment variables.");
+/** log lỗi dạng FULL OBJECT */
+async function logError(orderId: string, error: any) {
+  const ref = doc(db, 'orders', orderId);
+  await updateDoc(ref, {
+    lastError: error,
+    lastErrorAt: serverTimestamp(),
+  });
 }
 
-/**
- * Hàm xác thực chữ ký (Hỗ trợ cả Secure Webhook và Standard Webhook)
- */
-function verifySignature(rawBody: string, signature: string | null, timestamp: string | null) {
-    if (!signature) return false;
+/** verify webhook */
+function verify(raw: string, sig?: string | null, ts?: string | null) {
+  if (!sig || !ts) return false;
 
-    const received = signature.replace(/^sha256=/i, "").trim();
+  const payload = `${ts}.${JSON.stringify(JSON.parse(raw))}`;
 
-    // CHÌA KHÓA: Parse JSON rồi stringify lại để loại bỏ toàn bộ khoảng trắng thừa
-    // Điều này đảm bảo chuỗi hash khớp 100% với định dạng của SePay
-    const minifiedBody = JSON.stringify(JSON.parse(rawBody));
+  const expected = crypto
+    .createHmac('sha256', SECRET)
+    .update(payload)
+    .digest('hex');
 
-    // Xây dựng chuỗi payload đúng chuẩn: timestamp.body
-    const payloadToSign = `${timestamp}.${minifiedBody}`;
+  const received = sig.replace(/^sha256=/i, '').trim();
 
-    const expected = crypto
-        .createHmac("sha256", SEPAY_SECRET)
-        .update(payloadToSign)
-        .digest("hex");
-
-    // Debug log để bạn đối chiếu
-    console.log("PAYLOAD:", payloadToSign);
-    console.log("EXPECTED:", expected);
-    console.log("RECEIVED:", received);
-
-    return expected === received;
+  return crypto.timingSafeEqual(Buffer.from(expected), Buffer.from(received));
 }
 
-/**
- * API Route Handler
- */
 export async function POST(req: NextRequest) {
-    try {
-        // 1. Đọc nội dung thô (Raw Body)
-        const rawBody = await req.text();
+  let orderId = '';
 
-        // 2. Lấy Headers
-        const signature = req.headers.get('x-sepay-signature');
-        const timestamp = req.headers.get('x-sepay-timestamp');
+  try {
+    const raw = await req.text();
+    const sig = req.headers.get('x-sepay-signature');
+    const ts = req.headers.get('x-sepay-timestamp');
 
-        // 3. Chống tấn công phát lại (Replay Attack) - chặn các request trễ hơn 5 phút (300 giây)
-        if (timestamp && Math.abs(Date.now() / 1000 - Number(timestamp)) > 300) {
-            return NextResponse.json(
-                { ok: false, message: 'Request expired' },
-                { status: 401 }
-            );
-        }
-
-        // 4. Kiểm tra chữ ký
-        if (!verifySignature(rawBody, signature, timestamp)) {
-            return NextResponse.json(
-                { ok: false, message: 'Invalid signature' },
-                { status: 401 }
-            );
-        }
-
-        // 5. Chữ ký hợp lệ -> Parse JSON an toàn
-        const body = JSON.parse(rawBody);
-
-        // Chuẩn hóa dữ liệu (Hỗ trợ cấu trúc cũ/mới của SePay)
-        const transferContent = body.transferContent || body.content || body.description;
-        const transferAmount = Number(body.transferAmount || body.amount);
-        const transactionId = body.transactionId || body.id;
-        const bankTime = body.bankTime || new Date().toISOString();
-
-        if (!transferContent) {
-            return NextResponse.json(
-                { ok: false, message: 'Missing content' },
-                { status: 400 }
-            );
-        }
-
-        // 6. Trích xuất Order ID (VD: SEVQR ORDER 12345ABCD)
-        const match = transferContent.match(/SEVQR\s*ORDER\s*([A-Za-z0-9]+)/i);
-
-        if (!match) {
-            return NextResponse.json({
-                ok: false,
-                message: 'Invalid order format'
-            });
-        }
-
-        const orderId = match[1];
-
-        // 7. Lấy dữ liệu đơn hàng từ Firebase
-        const orderRef = doc(db, 'orders', orderId);
-        const orderSnap = await getDoc(orderRef);
-
-        if (!orderSnap.exists()) {
-            return NextResponse.json({ ok: false, message: 'Order not found' });
-        }
-
-        const order = orderSnap.data();
-
-        // 8. Idempotency Check (Chống ghi đè nếu SePay gửi request nhiều lần)
-        if (order.status === 'paid') {
-            return NextResponse.json({ success: true, message: 'Already processed' });
-        }
-
-        // 9. Xác thực số tiền thanh toán
-        if (order.amount !== transferAmount) {
-            return NextResponse.json({
-                ok: false,
-                message: 'Invalid amount'
-            });
-        }
-
-        // 10. Cập nhật trạng thái Database thành công
-        await updateDoc(orderRef, {
-            status: 'paid',
-            transactionId: String(transactionId),
-            amountReceived: transferAmount,
-            paidAt: serverTimestamp(),
-            bankTime
-        });
-
-        // 11. Báo cáo thành công về SePay (Bắt buộc trả về success: true)
-        return NextResponse.json({ success: true, ok: true });
-
-    } catch (error: any) {
-        console.error("Webhook Error: ", error.message);
-        return NextResponse.json(
-            { ok: false, message: error.message || 'Server error' },
-            { status: 500 }
-        );
+    // 1. verify signature
+    if (!verify(raw, sig, ts)) {
+      return NextResponse.json({ success: false, message: 'Chữ ký không hợp lệ' }, { status: 401 });
     }
+
+    const body = JSON.parse(raw);
+
+    const content = body.transferContent || body.content || body.description;
+    const amount = Number(body.transferAmount || body.amount || 0);
+    const transactionId = String(body.transactionId || body.id || '');
+    const bankTime = body.bankTime || new Date().toISOString();
+
+    // 2. extract orderId
+    orderId = content?.match(ORDER_REGEX)?.[1] || '';
+
+    if (!orderId) {
+      await logError('unknown', {
+        step: 'PARSE_ORDER',
+        message: 'Sai định dạng mã đơn hàng',
+        raw: body,
+      });
+
+      return NextResponse.json({ success: false, message: 'Sai mã đơn hàng' }, { status: 400 });
+    }
+
+    const ref = doc(db, 'orders', orderId);
+    const snap = await getDoc(ref);
+
+    if (!snap.exists()) {
+      await logError(orderId, {
+        step: 'ORDER_NOT_FOUND',
+        message: 'Không tìm thấy đơn hàng',
+        raw: body,
+      });
+
+      return NextResponse.json({ success: false, message: 'Không tìm thấy đơn hàng' }, { status: 404 });
+    }
+
+    const order = snap.data();
+
+    // 3. idempotency
+    if (order.status === 'paid') {
+      return NextResponse.json({ success: true, message: 'Đã xử lý' });
+    }
+
+    // 4. check amount
+    if (order.amount !== amount) {
+      await logError(orderId, {
+        step: 'AMOUNT_MISMATCH',
+        message: 'Số tiền không khớp',
+        expected: order.amount,
+        received: amount,
+        raw: body,
+      });
+
+      return NextResponse.json({ success: false, message: 'Sai số tiền' }, { status: 400 });
+    }
+
+    // 5. success update
+    await updateDoc(ref, {
+      status: 'paid',
+      transactionId,
+      amountReceived: amount,
+      bankTime,
+      paidAt: serverTimestamp(),
+      lastError: null,
+    });
+
+    return NextResponse.json({
+      success: true,
+      message: 'Thanh toán thành công',
+    });
+
+  } catch (e: any) {
+    if (orderId) {
+      await logError(orderId, {
+        step: 'SYSTEM_ERROR',
+        message: 'Lỗi hệ thống webhook',
+        error: e?.message || e,
+      });
+    }
+
+    return NextResponse.json({ success: false, message: 'Lỗi hệ thống' }, { status: 500 });
+  }
 }
