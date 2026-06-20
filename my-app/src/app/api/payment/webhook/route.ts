@@ -8,12 +8,14 @@ const SEPAY_SECRET = process.env.SEPAY_WEBHOOK_SECRET!;
 function verifySignature(rawBody: string, signature: string | null) {
     if (!signature) return false;
 
-    const expectedSignature = crypto
-        .createHmac('sha256', SEPAY_SECRET)
-        .update(rawBody)
-        .digest('hex');
+    const received = signature.replace(/^sha256=/i, "");
 
-    return expectedSignature === signature;
+    const expected = crypto
+        .createHmac("sha256", process.env.SEPAY_SECRET!)
+        .update(rawBody)
+        .digest("hex");
+
+    return expected === received;
 }
 
 export async function POST(req: NextRequest) {
