@@ -23,14 +23,14 @@ export default function Home() {
           </Link>
 
           <Link
-            href="#"
+            href="/login"
             className="flex h-12 items-center justify-center rounded-xl border border-zinc-200 bg-white font-medium text-black transition hover:bg-zinc-50"
           >
             Login
           </Link>
 
           <Link
-            href="/checkout"
+            href="/checkout/create"
             className="flex h-12 items-center justify-center rounded-xl border border-zinc-200 bg-white font-medium text-black transition hover:bg-zinc-50"
           >
             Checkout
