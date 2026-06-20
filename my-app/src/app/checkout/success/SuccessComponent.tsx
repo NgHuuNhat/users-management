@@ -56,7 +56,7 @@ export default function SuccessComponent() {
 
                 <button
                     onClick={() => location.replace('/')}
-                    className="cursor-pointermt-8 w-full rounded-2xl bg-black py-4 text-white"
+                    className="cursor-pointer mt-8 w-full rounded-2xl bg-black py-4 text-white"
                 >
                     Về trang chủ
                 </button>

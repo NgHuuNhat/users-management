@@ -25,7 +25,7 @@ export async function POST(req: NextRequest) {
     const qrUrl =
       `https://img.vietqr.io/image/${BANK}-${ACCOUNT}-compact2.png` +
       `?amount=${amount}` +
-      `&addInfo=SEVQR ORDER_${orderId}` +
+      `&addInfo=${encodeURIComponent(`SEVQR ORDER_${orderId}`)}` +
       `&accountName=${encodeURIComponent(NAME)}`;
 
     return NextResponse.json({ orderId, qrUrl });

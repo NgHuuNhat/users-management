@@ -1,6 +1,6 @@
 'use client';
 
-import { useEffect, useState } from 'react';
+import { useEffect, useRef, useState } from 'react';
 import { useRouter } from 'next/navigation';
 import { doc, onSnapshot } from 'firebase/firestore';
 import { db } from '@/core/services/firebase';
@@ -8,13 +8,18 @@ import { db } from '@/core/services/firebase';
 export default function CheckoutCreate() {
     const [qr, setQr] = useState('');
     const router = useRouter();
+    const called = useRef(false);
 
     useEffect(() => {
+        if (called.current) return;
+        called.current = true;
+
         let unsubscribe: (() => void) | undefined;
 
-        const createOrder = async () => {
+        (async () => {
             const res = await fetch('/api/checkout/create', {
                 method: 'POST',
+                headers: { 'Content-Type': 'application/json' },
                 body: JSON.stringify({
                     amount: 2000,
                     items: [],
@@ -32,15 +37,11 @@ export default function CheckoutCreate() {
                     const order = snap.data();
 
                     if (order.status === 'paid') {
-                        router.replace(
-                            `/checkout/success?orderId=${data.orderId}`
-                        );
+                        router.replace(`/checkout/success?orderId=${data.orderId}`);
                     }
                 }
             );
-        };
-
-        createOrder();
+        })();
 
         return () => unsubscribe?.();
     }, [router]);
@@ -56,17 +57,23 @@ export default function CheckoutCreate() {
                     Quét mã QR để thanh toán
                 </p>
 
-                {qr ? (
-                    <img
-                        src={qr}
-                        alt="QR"
-                        className="mx-auto mt-8 w-72 rounded-3xl shadow-sm"
-                    />
-                ) : (
-                    <p className="mt-8 text-zinc-500">
-                        Đang tạo mã QR...
-                    </p>
-                )}
+                <div className="mt-10 mx-auto w-96 h-96 flex items-center justify-center rounded-3xl bg-white shadow-md border border-zinc-100">
+                    {qr ? (
+                        <img
+                            src={qr}
+                            alt="QR"
+                            className="w-full h-full object-contain rounded-3xl p-4"
+                        />
+                    ) : (
+                        <div className="flex flex-col items-center justify-center gap-4 text-zinc-500">
+                            <div className="w-56 h-56 bg-zinc-200 rounded-2xl animate-pulse" />
+                            <p className="text-base font-medium">
+                                Đang tạo mã QR...
+                            </p>
+                        </div>
+                    )}
+                </div>
+
             </div>
         </main>
     );

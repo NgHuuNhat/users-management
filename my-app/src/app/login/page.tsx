@@ -37,7 +37,7 @@ export default function Login() {
 
                 <p className="min-h-5 text-sm text-red-500">{error ? error : ""}</p>
 
-                <button type="submit" className="w-full rounded-2xl bg-black py-4 font-medium text-white transition hover:opacity-90">
+                <button type="submit" className="cursor-pointer w-full rounded-2xl bg-black py-4 font-medium text-white transition hover:opacity-90">
                     Đăng nhập
                 </button>
             </form>
