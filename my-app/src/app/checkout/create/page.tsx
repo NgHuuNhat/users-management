@@ -39,10 +39,6 @@ export default function CheckoutCreate() {
                     if (order.status === 'paid') {
                         router.replace(`/checkout/success?orderId=${data.orderId}`);
                     }
-
-                    if (order.lastError || order.status === 'failed') {
-                        router.replace(`/checkout/fail?orderId=${data.orderId}`);
-                    }
                 }
             );
         })();

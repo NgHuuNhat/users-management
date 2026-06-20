@@ -1,0 +1,55 @@
+import { doc, getDoc, updateDoc, serverTimestamp } from 'firebase/firestore';
+import { db } from '@/core/services/firebase';
+
+const ORDER_REGEX = /SEVQR\s*ORDER\s*([A-Za-z0-9]+)/i;
+
+export async function updateOrder(rawBody: string) {
+  try {
+    // Đọc dữ liệu webhook
+    const body = JSON.parse(rawBody);
+
+    // Lấy nội dung chuyển khoản và tách mã đơn hàng
+    const content = body.transferContent || body.content || body.description || '';
+    const orderId = content.match(ORDER_REGEX)?.[1];
+
+    if (!orderId)
+      throw { status: 400, message: 'Không tìm thấy mã đơn hàng' };
+
+    // Chuẩn hóa dữ liệu thanh toán
+    const amount = Number(body.transferAmount || body.amount || 0);
+    const transactionId = String(body.transactionId || body.id || '');
+    const bankTime = body.bankTime || new Date().toISOString();
+
+    // Tìm đơn hàng trong Firestore
+    const orderRef = doc(db, 'orders', orderId);
+    const orderSnapshot = await getDoc(orderRef);
+
+    if (!orderSnapshot.exists())
+      throw { status: 404, message: 'Đơn hàng không tồn tại' };
+
+    const order = orderSnapshot.data();
+
+    // Chống xử lý trùng khi webhook được gửi lại
+    if (order.status === 'paid')
+      return { success: true, message: 'Đơn hàng đã được thanh toán trước đó' };
+
+    // Kiểm tra số tiền chuyển khoản
+    if (order.amount !== amount)
+      throw { status: 400, message: 'Số tiền thanh toán không khớp' };
+
+    // Cập nhật trạng thái thanh toán thành công
+    await updateDoc(orderRef, {
+      status: 'paid',
+      amountReceived: amount,
+      transactionId,
+      bankTime,
+      paidAt: serverTimestamp(),
+      lastError: null,
+    });
+
+    return { success: true, message: 'Thanh toán thành công' };
+  } catch (error) {
+    console.error('Lỗi cập nhật đơn hàng:', error);
+    throw error;
+  }
+}

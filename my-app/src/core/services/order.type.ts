@@ -1,4 +1,4 @@
-export interface Order {
+interface Order {
     id: number
     amount: number
     status: "pending" | "completed" | "cancelled"
