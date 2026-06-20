@@ -9,41 +9,55 @@ if (!SEPAY_SECRET) {
     throw new Error("Missing SEPAY_WEBHOOK_SECRET");
 }
 
-function verifySignature(rawBody: string, signature: string | null) {
-    if (!signature) return false;
+// 1. Pass the timestamp into your verifier
+function verifySignature(rawBody: string, signature: string | null, timestamp: string | null) {
+    if (!signature || !timestamp) return false;
 
     const received = signature.replace(/^sha256=/i, "");
 
+    // 2. Concatenate timestamp and raw body separated by a dot
+    const payloadToSign = `${timestamp}.${rawBody}`;
+
     const expected = crypto
         .createHmac("sha256", SEPAY_SECRET)
-        .update(rawBody)
+        .update(payloadToSign)
         .digest("hex");
+
+
+    console.log("RAW:", rawBody);
+    console.log("EXPECTED:", expected);
+    console.log("RECEIVED:", received);
 
     return expected === received;
 }
 
 export async function POST(req: NextRequest) {
     try {
-        // 1. RAW BODY (quan trọng)
         const rawBody = await req.text();
 
-        // 2. verify HMAC signature
+        // 3. Extract both signature and timestamp headers
         const signature = req.headers.get('x-sepay-signature');
+        const timestamp = req.headers.get('x-sepay-timestamp');
 
-        if (!verifySignature(rawBody, signature)) {
+        // 4. (Recommended) Block replay attacks by rejecting payloads older than 5 minutes
+        if (timestamp && Math.abs(Date.now() / 1000 - Number(timestamp)) > 300) {
+            return NextResponse.json(
+                { ok: false, message: 'Request expired' },
+                { status: 401 }
+            );
+        }
+
+        // 5. Verify the signature with the timestamp included
+        if (!verifySignature(rawBody, signature, timestamp)) {
             return NextResponse.json(
                 { ok: false, message: 'Invalid signature' },
                 { status: 401 }
             );
         }
 
-        // 3. parse JSON sau khi verify
         const body = JSON.parse(rawBody);
 
-        // 4. normalize data
-        const transferContent =
-            body.transferContent || body.content || body.description;
-
+        const transferContent = body.transferContent || body.content || body.description;
         const transferAmount = Number(body.transferAmount || body.amount);
         const transactionId = body.transactionId || body.id;
         const bankTime = body.bankTime || new Date().toISOString();
@@ -55,7 +69,6 @@ export async function POST(req: NextRequest) {
             );
         }
 
-        // 5. extract orderId
         const match = transferContent.match(/SEVQR\s*ORDER\s*([A-Za-z0-9]+)/i);
 
         if (!match) {
@@ -67,7 +80,6 @@ export async function POST(req: NextRequest) {
 
         const orderId = match[1];
 
-        // 6. find order
         const orderRef = doc(db, 'orders', orderId);
         const orderSnap = await getDoc(orderRef);
 
@@ -77,12 +89,10 @@ export async function POST(req: NextRequest) {
 
         const order = orderSnap.data();
 
-        // 7. idempotent
         if (order.status === 'paid') {
             return NextResponse.json({ ok: true, message: 'Already processed' });
         }
 
-        // 8. validate amount
         if (order.amount !== transferAmount) {
             return NextResponse.json({
                 ok: false,
@@ -90,7 +100,6 @@ export async function POST(req: NextRequest) {
             });
         }
 
-        // 9. update paid
         await updateDoc(orderRef, {
             status: 'paid',
             transactionId,
@@ -99,7 +108,8 @@ export async function POST(req: NextRequest) {
             bankTime
         });
 
-        return NextResponse.json({ ok: true });
+        // Ensure you return exact {"success": true} as SePay sometimes expects it over "ok: true"
+        return NextResponse.json({ success: true, ok: true });
     } catch (error: any) {
         return NextResponse.json(
             { ok: false, message: error.message || 'Server error' },
