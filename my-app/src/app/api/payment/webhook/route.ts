@@ -16,41 +16,26 @@ if (!SEPAY_SECRET) {
 function verifySignature(rawBody: string, signature: string | null, timestamp: string | null) {
     if (!signature) return false;
 
-    // Loại bỏ tiền tố 'sha256=' và khoảng trắng dư thừa
     const received = signature.replace(/^sha256=/i, "").trim();
 
-    // CHUẨN HÓA: Chuyển body về dạng minified JSON để loại bỏ khoảng trắng/xuống dòng 
-    // do NextJS sinh ra, đảm bảo cấu trúc giống 100% bản gốc từ SePay.
-    let minifiedBody = rawBody;
-    try {
-        minifiedBody = JSON.stringify(JSON.parse(rawBody));
-    } catch (e) {
-        console.warn("Không thể parse rawBody thành JSON. Sử dụng rawBody gốc.");
-    }
+    // CHÌA KHÓA: Parse JSON rồi stringify lại để loại bỏ toàn bộ khoảng trắng thừa
+    // Điều này đảm bảo chuỗi hash khớp 100% với định dạng của SePay
+    const minifiedBody = JSON.stringify(JSON.parse(rawBody));
 
-    // KỊCH BẢN A: Webhook Bảo mật (Có nối thêm timestamp vào chuỗi băm)
-    let payloadToSign = minifiedBody;
-    if (timestamp) {
-        payloadToSign = `${timestamp}.${minifiedBody}`;
-    }
+    // Xây dựng chuỗi payload đúng chuẩn: timestamp.body
+    const payloadToSign = `${timestamp}.${minifiedBody}`;
 
     const expected = crypto
         .createHmac("sha256", SEPAY_SECRET)
         .update(payloadToSign)
         .digest("hex");
 
-    // Nếu khớp với Kịch bản A -> Hợp lệ
-    if (expected === received) {
-        return true;
-    }
+    // Debug log để bạn đối chiếu
+    console.log("PAYLOAD:", payloadToSign);
+    console.log("EXPECTED:", expected);
+    console.log("RECEIVED:", received);
 
-    // KỊCH BẢN B (Dự phòng): Webhook thường (Chỉ hash nội dung body)
-    const expectedFallback = crypto
-        .createHmac("sha256", SEPAY_SECRET)
-        .update(minifiedBody)
-        .digest("hex");
-        
-    return expectedFallback === received;
+    return expected === received;
 }
 
 /**
