@@ -5,13 +5,17 @@ import { db } from '@/core/services/firebase';
 
 const SEPAY_SECRET = process.env.SEPAY_WEBHOOK_SECRET!;
 
+if (!SEPAY_SECRET) {
+    throw new Error("Missing SEPAY_WEBHOOK_SECRET");
+}
+
 function verifySignature(rawBody: string, signature: string | null) {
     if (!signature) return false;
 
     const received = signature.replace(/^sha256=/i, "");
 
     const expected = crypto
-        .createHmac("sha256", process.env.SEPAY_SECRET!)
+        .createHmac("sha256", SEPAY_SECRET)
         .update(rawBody)
         .digest("hex");
 
