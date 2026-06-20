@@ -6,6 +6,8 @@ import { db } from '@/core/services/firebase';
 // Lấy Secret Key từ biến môi trường
 const SEPAY_SECRET = process.env.SEPAY_WEBHOOK_SECRET!;
 
+console.log("SEPAY_SECRET:", SEPAY_SECRET);
+
 if (!SEPAY_SECRET) {
     throw new Error("Missing SEPAY_WEBHOOK_SECRET in environment variables.");
 }
