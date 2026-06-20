@@ -1,6 +1,14 @@
 interface WebhookData {
-    transferContent: string,
-    transferAmount: number,
-    transactionId: string,
-    bankTime: string
-}   
+    gateway: string
+    transactionDate: string
+    accountNumber: string
+    subAccount: any
+    code: any
+    content: string
+    transferType: string
+    description: string
+    transferAmount: number
+    referenceCode: string
+    accumulated: number
+    id: number
+}

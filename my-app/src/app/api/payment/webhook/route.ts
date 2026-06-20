@@ -1,31 +1,67 @@
 import { NextRequest, NextResponse } from 'next/server';
+import crypto from 'crypto';
 import { doc, getDoc, updateDoc, serverTimestamp } from 'firebase/firestore';
 import { db } from '@/core/services/firebase';
 
+const SEPAY_SECRET = process.env.SEPAY_WEBHOOK_SECRET!;
+
+function verifySignature(rawBody: string, signature: string | null) {
+    if (!signature) return false;
+
+    const expectedSignature = crypto
+        .createHmac('sha256', SEPAY_SECRET)
+        .update(rawBody)
+        .digest('hex');
+
+    return expectedSignature === signature;
+}
+
 export async function POST(req: NextRequest) {
     try {
-        const body = await req.json();
+        // 1. RAW BODY (quan trọng)
+        const rawBody = await req.text();
 
-        // 1. Normalize SePay payload (có thể khác nhau tùy provider)
-        const transferContent = body.transferContent || body.content || body.description;
+        // 2. verify HMAC signature
+        const signature = req.headers.get('x-sepay-signature');
+
+        if (!verifySignature(rawBody, signature)) {
+            return NextResponse.json(
+                { ok: false, message: 'Invalid signature' },
+                { status: 401 }
+            );
+        }
+
+        // 3. parse JSON sau khi verify
+        const body = JSON.parse(rawBody);
+
+        // 4. normalize data
+        const transferContent =
+            body.transferContent || body.content || body.description;
+
         const transferAmount = Number(body.transferAmount || body.amount);
         const transactionId = body.transactionId || body.id;
         const bankTime = body.bankTime || new Date().toISOString();
 
         if (!transferContent) {
-            return NextResponse.json({ ok: false, message: 'Missing content' }, { status: 400 });
+            return NextResponse.json(
+                { ok: false, message: 'Missing content' },
+                { status: 400 }
+            );
         }
 
-        // 2. Extract orderId
-        // const match = transferContent.match(/ORDER_(.+)/);
-        // const match = transferContent.match(/ORDER\s+([a-zA-Z0-9]+)/);
+        // 5. extract orderId
         const match = transferContent.match(/SEVQR\s*ORDER\s*([A-Za-z0-9]+)/i);
+
         if (!match) {
-            return NextResponse.json({ ok: false, message: 'Invalid order format' });
+            return NextResponse.json({
+                ok: false,
+                message: 'Invalid order format'
+            });
         }
+
         const orderId = match[1];
 
-        // 3. Find order in Firestore
+        // 6. find order
         const orderRef = doc(db, 'orders', orderId);
         const orderSnap = await getDoc(orderRef);
 
@@ -35,12 +71,12 @@ export async function POST(req: NextRequest) {
 
         const order = orderSnap.data();
 
-        // 4. Idempotent check (tránh update 2 lần)
+        // 7. idempotent
         if (order.status === 'paid') {
             return NextResponse.json({ ok: true, message: 'Already processed' });
         }
 
-        // 5. Validate amount (cực quan trọng)
+        // 8. validate amount
         if (order.amount !== transferAmount) {
             return NextResponse.json({
                 ok: false,
@@ -48,7 +84,7 @@ export async function POST(req: NextRequest) {
             });
         }
 
-        // 6. Update order → PAID
+        // 9. update paid
         await updateDoc(orderRef, {
             status: 'paid',
             transactionId,
@@ -60,10 +96,7 @@ export async function POST(req: NextRequest) {
         return NextResponse.json({ ok: true });
     } catch (error: any) {
         return NextResponse.json(
-            {
-                ok: false,
-                message: error.message || 'Server error'
-            },
+            { ok: false, message: error.message || 'Server error' },
             { status: 500 }
         );
     }
