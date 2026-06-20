@@ -10,19 +10,15 @@ if (!SEPAY_SECRET) {
 }
 
 // 1. Pass the timestamp into your verifier
-function verifySignature(rawBody: string, signature: string | null, timestamp: string | null) {
-    if (!signature || !timestamp) return false;
+function verifySignature(rawBody: string, signature: string | null) {
+    if (!signature) return false;
 
     const received = signature.replace(/^sha256=/i, "");
 
-    // 2. Concatenate timestamp and raw body separated by a dot
-    const payloadToSign = `${timestamp}.${rawBody}`;
-
     const expected = crypto
         .createHmac("sha256", SEPAY_SECRET)
-        .update(payloadToSign)
+        .update(rawBody) // 👈 CHỈ rawBody
         .digest("hex");
-
 
     console.log("RAW:", rawBody);
     console.log("EXPECTED:", expected);
@@ -37,20 +33,11 @@ export async function POST(req: NextRequest) {
 
         // 3. Extract both signature and timestamp headers
         const signature = req.headers.get('x-sepay-signature');
-        const timestamp = req.headers.get('x-sepay-timestamp');
-
-        // 4. (Recommended) Block replay attacks by rejecting payloads older than 5 minutes
-        if (timestamp && Math.abs(Date.now() / 1000 - Number(timestamp)) > 300) {
-            return NextResponse.json(
-                { ok: false, message: 'Request expired' },
-                { status: 401 }
-            );
-        }
 
         // 5. Verify the signature with the timestamp included
-        if (!verifySignature(rawBody, signature, timestamp)) {
+        if (!verifySignature(rawBody, signature)) {
             return NextResponse.json(
-                { ok: false, message: 'Invalid signature' },
+                { ok: false, message: "Invalid signature" },
                 { status: 401 }
             );
         }
