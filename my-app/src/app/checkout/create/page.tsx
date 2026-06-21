@@ -54,7 +54,7 @@ export default function CheckoutCreate() {
 
         channel.bind('error-event', (data: { message: string }) => {
             setError(data.message);
-            setTimeout(() => setError(''), 5000);
+            // setTimeout(() => setError(''), 5000);
         });
 
         return () => {
