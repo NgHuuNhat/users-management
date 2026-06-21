@@ -9,7 +9,7 @@ export async function verifySignature(req: NextRequest, rawBody: string) {
     const timestamp = req.headers.get('x-sepay-timestamp');
 
     // Không có chữ ký thì bỏ qua để hỗ trợ test bằng Postman
-    if (!signature || !timestamp) return;
+    // if (!signature || !timestamp) return;
 
     // Tạo chữ ký mong đợi từ secret và raw body
     const expectedSignature = crypto
