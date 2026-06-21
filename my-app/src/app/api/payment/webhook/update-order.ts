@@ -19,7 +19,7 @@ export async function updateOrder(rawBody: string) {
     // Chuẩn hóa dữ liệu thanh toán
     const amount = Number(body.transferAmount || body.amount || 0);
     const transactionId = String(body.transactionId || body.id || '');
-    const bankTime = body.bankTime || new Date().toISOString();
+    const bankTime = timecv(body.bankTime) || serverTimestamp();
 
     // Tìm đơn hàng trong Firestore
     const orderRef = doc(db, 'orders', orderId);
@@ -55,4 +55,21 @@ export async function updateOrder(rawBody: string) {
   } catch (error) {
     throw error;
   }
+}
+
+export function timecv(bankTime: string) {
+  const d = new Date(bankTime);
+
+  const str = new Intl.DateTimeFormat("en-US", {
+    timeZone: "Asia/Ho_Chi_Minh",
+    year: "numeric",
+    month: "long",
+    day: "2-digit",
+    hour: "numeric",
+    minute: "2-digit",
+    second: "2-digit",
+    hour12: true,
+  }).format(d);
+
+  return str.replace(",", " at") + " UTC+7";
 }
