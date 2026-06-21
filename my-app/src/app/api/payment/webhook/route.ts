@@ -1,6 +1,7 @@
 import { NextRequest, NextResponse } from 'next/server';
 import { verifySignature } from './verify-signature';
 import { updateOrder } from './update-order';
+import { sendErrorToClient } from './pusher';
 
 export async function POST(req: NextRequest) {
   try {
@@ -16,6 +17,7 @@ export async function POST(req: NextRequest) {
     return NextResponse.json(result);
   } catch (error: any) {
     console.error('Lỗi webhook:', error);
+    await sendErrorToClient(error.message || 'Đã xảy ra lỗi hệ thống');
 
     return NextResponse.json(
       { success: false, message: error.message || 'Đã xảy ra lỗi hệ thống' },

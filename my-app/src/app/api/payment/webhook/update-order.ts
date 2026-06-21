@@ -1,5 +1,6 @@
 import { doc, getDoc, updateDoc, serverTimestamp } from 'firebase/firestore';
 import { db } from '@/core/services/firebase';
+import { pusherBe, sendErrorToClient } from './pusher';
 
 const ORDER_REGEX = /SEVQR\s*ORDER\s*([A-Za-z0-9]+)/i;
 
@@ -30,8 +31,11 @@ export async function updateOrder(rawBody: string) {
     const order = orderSnapshot.data();
 
     // Chống xử lý trùng khi webhook được gửi lại
-    if (order.status === 'paid')
-      return { success: true, message: 'Đơn hàng đã được thanh toán trước đó' };
+    if (order.status === 'paid') {
+      const msg = 'Đơn hàng đã được thanh toán trước đó';
+      await sendErrorToClient(msg);
+      return { success: true, message: msg };
+    }
 
     // Kiểm tra số tiền chuyển khoản
     if (order.amount !== amount)
@@ -44,12 +48,11 @@ export async function updateOrder(rawBody: string) {
       transactionId,
       bankTime,
       paidAt: serverTimestamp(),
-      lastError: null,
+      error: null,
     });
 
     return { success: true, message: 'Thanh toán thành công' };
   } catch (error) {
-    console.error('Lỗi cập nhật đơn hàng:', error);
     throw error;
   }
 }

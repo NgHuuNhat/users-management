@@ -4,11 +4,13 @@ import { useEffect, useRef, useState } from 'react';
 import { useRouter } from 'next/navigation';
 import { doc, onSnapshot } from 'firebase/firestore';
 import { db } from '@/core/services/firebase';
+import { pusherFe } from '@/app/api/payment/webhook/pusher-client';
 
 export default function CheckoutCreate() {
     const [qr, setQr] = useState('');
     const router = useRouter();
     const called = useRef(false);
+    const [error, setError] = useState<string>();
 
     useEffect(() => {
         if (called.current) return;
@@ -46,6 +48,21 @@ export default function CheckoutCreate() {
         return () => unsubscribe?.();
     }, [router]);
 
+
+    useEffect(() => {
+        const channel = pusherFe.subscribe('checkout-errors');
+
+        channel.bind('error-event', (data: { message: string }) => {
+            setError(data.message);
+            setTimeout(() => setError(''), 5000);
+        });
+
+        return () => {
+            channel.unbind_all();
+            channel.unsubscribe();
+        };
+    }, []);
+
     return (
         <main className="flex min-h-screen items-center justify-center bg-zinc-50 p-6">
             <div className="w-full max-w-sm text-center">
@@ -56,6 +73,11 @@ export default function CheckoutCreate() {
                 <p className="mt-2 text-zinc-500">
                     Quét mã QR để thanh toán
                 </p>
+
+                {/* ERROR WEBHOOK REALTIME */}
+                <div className="min-h-5 mt-6 text-red-500">
+                    {error ? error : ''}
+                </div>
 
                 <div className="mt-10 mx-auto w-96 h-96 flex items-center justify-center rounded-3xl bg-white shadow-md border border-zinc-100">
                     {qr ? (

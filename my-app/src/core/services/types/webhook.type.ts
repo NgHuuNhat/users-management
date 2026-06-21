@@ -1,4 +1,4 @@
-interface WebhookData {
+interface WebhookRequest {
     gateway: string
     transactionDate: string
     accountNumber: string

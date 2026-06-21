@@ -1,4 +1,4 @@
-interface User {
+interface UserDatabase {
     id: string;
     email: string;
     role: 'user' | 'admin';

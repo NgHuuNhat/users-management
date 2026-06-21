@@ -23,7 +23,6 @@ export async function verifySignature(req: NextRequest, rawBody: string) {
     if (!crypto.timingSafeEqual(Buffer.from(expectedSignature), Buffer.from(receivedSignature)))
       throw { status: 401, message: 'Chữ ký webhook không hợp lệ' };
   } catch (error) {
-    console.error('Lỗi xác thực chữ ký:', error);
     throw error;
   }
 }
