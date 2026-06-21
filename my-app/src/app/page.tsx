@@ -35,6 +35,13 @@ export default function Home() {
           >
             Checkout
           </Link>
+
+          <Link
+            href="/history"
+            className="flex h-12 items-center justify-center rounded-xl border border-zinc-200 bg-white font-medium text-black transition hover:bg-zinc-50"
+          >
+            History
+          </Link>
         </div>
       </div>
     </main>

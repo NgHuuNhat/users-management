@@ -11,13 +11,20 @@ export async function POST(req: NextRequest) {
     const { amount = 2000, items = [] } = await req.json();
 
     const orderRef = await addDoc(collection(db, 'orders'), {
-      items,
+      items: ['item1', 'item2', 'item3', ...items],
       amount,
       status: 'pending',
       transactionId: null,
       paidAt: null,
       amountReceived: null,
       createdAt: serverTimestamp(),
+      error: null,
+      paymentStatus: 'pending',
+      customer: {
+        name: 'Nguyễn Hữu Nhật',
+        phone: '0985627061',
+        address: '123 Đường ABC, Phường XYZ, Quận 1, TP.HCM',
+      },
     });
 
     const orderId = orderRef.id;

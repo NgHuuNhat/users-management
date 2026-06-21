@@ -31,7 +31,7 @@ export async function updateOrder(rawBody: string) {
     const order = orderSnapshot.data();
 
     // Chống xử lý trùng khi webhook được gửi lại
-    if (order.status === 'paid') {
+    if (order.paymentStatus === 'paid') {
       const msg = 'Đơn hàng đã được thanh toán trước đó';
       await sendErrorToClient(msg);
       return { success: true, message: msg };
@@ -43,7 +43,7 @@ export async function updateOrder(rawBody: string) {
 
     // Cập nhật trạng thái thanh toán thành công
     await updateDoc(orderRef, {
-      status: 'paid',
+      paymentStatus: 'paid',
       amountReceived: amount,
       transactionId,
       bankTime,

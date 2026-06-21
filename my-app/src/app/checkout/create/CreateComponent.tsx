@@ -5,7 +5,6 @@ import { useRouter } from 'next/navigation';
 import { doc, onSnapshot } from 'firebase/firestore';
 import { db } from '@/core/services/firebase';
 import { getPusher } from '@/core/libs/pusher-client';
-// import { pusherFe } from '@/core/libs/pusher-client';
 
 export default function CreateComponent() {
     const [qr, setQr] = useState('');
@@ -39,7 +38,7 @@ export default function CreateComponent() {
 
                     const order = snap.data();
 
-                    if (order.status === 'paid') {
+                    if (order.paymentStatus === 'paid') {
                         router.replace(`/checkout/success?orderId=${data.orderId}`);
                     }
                 }
