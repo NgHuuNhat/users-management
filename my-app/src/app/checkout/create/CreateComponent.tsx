@@ -4,7 +4,8 @@ import { useEffect, useRef, useState } from 'react';
 import { useRouter } from 'next/navigation';
 import { doc, onSnapshot } from 'firebase/firestore';
 import { db } from '@/core/services/firebase';
-import { pusherFe } from '@/core/libs/pusher-client';
+import { getPusher } from '@/core/libs/pusher-client';
+// import { pusherFe } from '@/core/libs/pusher-client';
 
 export default function CreateComponent() {
     const [qr, setQr] = useState('');
@@ -50,6 +51,7 @@ export default function CreateComponent() {
 
 
     useEffect(() => {
+        const pusherFe = getPusher();
         const channel = pusherFe.subscribe('checkout-errors');
 
         channel.bind('error-event', (data: { message: string }) => {
