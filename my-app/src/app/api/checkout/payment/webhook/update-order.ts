@@ -1,6 +1,6 @@
 import { doc, getDoc, updateDoc, serverTimestamp } from 'firebase/firestore';
 import { db } from '@/core/services/firebase';
-import { sendErrorToClient } from '../../../../core/libs/pusher';
+import { sendErrorToClient } from '../../../../../core/features/checkout/pusher';
 
 const ORDER_REGEX = /SEVQR\s*ORDER\s*([A-Za-z0-9]+)/i;
 

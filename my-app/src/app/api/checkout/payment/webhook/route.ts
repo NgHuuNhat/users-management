@@ -1,7 +1,7 @@
 import { NextRequest, NextResponse } from 'next/server';
 import { verifySignature } from './verify-signature';
 import { updateOrder } from './update-order';
-import { sendErrorToClient } from '../../../../core/libs/pusher';
+import { sendErrorToClient } from '../../../../../core/features/checkout/pusher';
 
 export async function POST(req: NextRequest) {
   try {
