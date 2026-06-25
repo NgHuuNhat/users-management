@@ -32,7 +32,7 @@ export interface Order {
     bank: {
         transferAmount: number,
         transactionId: number,
-        bankTime: string,
+        transactionDate: string,
         content: string,
     },
 }

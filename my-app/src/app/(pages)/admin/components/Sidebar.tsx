@@ -7,9 +7,9 @@ export default function Sidebar() {
   const pathname = usePathname();
 
   const menuItems = [
+    { name: "Khách hàng (User)", href: "/admin/users", icon: "👥" },
     { name: "Sản phẩm (Product)", href: "/admin/products", icon: "📦" },
     { name: "Đơn hàng (Order)", href: "/admin/orders", icon: "🛒" },
-    { name: "Khách hàng (User)", href: "/admin/users", icon: "👥" },
     { name: "Lịch sử Webhook", href: "/admin/webhooks", icon: "⚡" },
   ];
 
@@ -26,11 +26,10 @@ export default function Sidebar() {
             <Link
               key={item.name}
               href={item.href}
-              className={`flex items-center gap-3 px-4 py-3 rounded-lg transition-all duration-200 ${
-                isActive
+              className={`flex items-center gap-3 px-4 py-3 rounded-lg transition-all duration-200 ${isActive
                   ? "bg-blue-600 text-white shadow-lg font-medium"
                   : "text-slate-400 hover:bg-slate-800 hover:text-slate-200"
-              }`}
+                }`}
             >
               <span className="text-xl">{item.icon}</span>
               <span className="text-sm">{item.name}</span>

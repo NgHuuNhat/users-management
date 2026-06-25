@@ -19,7 +19,7 @@ export async function updateOrder(rawBody: string) {
     // Chuẩn hóa dữ liệu thanh toán
     const amount = Number(body.transferAmount || body.amount || 0);
     const transactionId = String(body.transactionId || body.id || '');
-    const bankTime = body.bankTime || serverTimestamp();
+    const transactionDate = body.transactionDate || '';
 
     // Tìm đơn hàng trong Firestore
     const orderRef = doc(db, 'orders', orderId);
@@ -46,7 +46,7 @@ export async function updateOrder(rawBody: string) {
       bank: {
         transferAmount: amount,
         transactionId: transactionId,
-        bankTime: bankTime,
+        transactionDate: transactionDate,
         content: content,
       },
       paymentStatus: 'paid',

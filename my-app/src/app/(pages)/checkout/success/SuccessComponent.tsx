@@ -59,7 +59,7 @@ export default function SuccessComponent() {
 
                     <div className="rounded-2xl bg-white p-4 shadow-sm">
                         Thời gian:{' '}
-                        {order?.bank?.bankTime?.toDate().toLocaleString('vi-VN') ?? '..'}
+                        {order?.bank?.transactionDate ?? '..'}
                     </div>
                 </div>
 
