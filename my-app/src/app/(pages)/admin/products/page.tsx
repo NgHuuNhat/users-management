@@ -210,7 +210,7 @@ export default function ProductsPage() {
                       {product.description}
                     </td>
                     <td className="py-3 px-4 font-bold text-blue-600 align-top pt-4">
-                      {product.price.toLocaleString("vi-VN")} đ
+                      {product.price?.toLocaleString("vi-VN")} đ
                     </td>
                   </tr>
                 ))}
