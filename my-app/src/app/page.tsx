@@ -42,6 +42,13 @@ export default function Home() {
           >
             History
           </Link>
+
+          <Link
+            href="/admin/orders"
+            className="flex h-12 items-center justify-center rounded-xl border border-zinc-200 bg-white font-medium text-black transition hover:bg-zinc-50"
+          >
+            Admin Dashboard Orders
+          </Link>
         </div>
       </div>
     </main>
