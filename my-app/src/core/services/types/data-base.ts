@@ -36,6 +36,7 @@ export interface Order {
         content: string,
     },
     createdAt: any,
+    debtAmount?: any; // số tiền còn thiếu number
 }
 
 export interface User {

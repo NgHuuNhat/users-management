@@ -18,6 +18,9 @@ export default function OrdersPage() {
   const [selectedOrder, setSelectedOrder] = useState<Order | null>(null);
   const [updatingId, setUpdatingId] = useState<string | null>(null);
 
+  const [debtInput, setDebtInput] = useState<number>(0);
+  const [showDebtInput, setShowDebtInput] = useState(false);
+
   // 1. Lắng nghe danh sách đơn hàng real-time từ Firestore
   useEffect(() => {
     const q = query(collection(db, COLLECTION_NAME), orderBy("createdAt", "desc"));
@@ -106,6 +109,13 @@ export default function OrdersPage() {
     completed: "Đã hoàn thành",
     cancelled: "Đã huỷ",
   };
+
+  const statusLabelPayment = {
+    pending: "Chưa thanh toán",
+    paid: "Đã thanh toán",
+    failed: "Thanh toán thất bại",
+    refunded: "Đã hoàn tiền",
+  }
 
   return (
     <div className="space-y-6">
@@ -220,6 +230,11 @@ export default function OrdersPage() {
                     {/* Cột 5: Trạng thái Thanh toán */}
                     <td className="py-4 px-4 text-center">
                       {getPaymentBadge(order.paymentStatus)}
+                      {order.paymentStatus === "pending" && (
+                        <div className="text-xs text-orange-600 font-semibold mt-1">
+                          Còn thiếu: {order.debtAmount?.toLocaleString("vi-VN")} đ
+                        </div>
+                      )}
                     </td>
 
                     {/* Cột 6: Nút tương tác nhanh */}
@@ -319,62 +334,136 @@ export default function OrdersPage() {
               )}
 
               {/* Phần D: THANH ĐIỀU KHIỂN HÀNH ĐỘNG DÀNH CHO ADMIN */}
-              <div className="border-t border-slate-100 pt-4 space-y-3">
-                <span className="text-[10px] font-bold text-slate-400 uppercase tracking-wide block">Bảng điều khiển trạng thái (Admin Action)</span>
+              <div className="border-t border-slate-100 pt-4 space-y-5">
+                <span className="text-[10px] font-bold text-slate-400 uppercase tracking-wide block">
+                  Bảng điều khiển trạng thái (Admin Action)
+                </span>
 
-                <div className="flex flex-wrap gap-2">
-                  {/* Hành động vận chuyển */}
-                  {selectedOrder.status === "pending" && (
-                    <button
-                      disabled={updatingId !== null}
-                      onClick={() => handleUpdateStatus(selectedOrder.id, { status: "processing" })}
-                      className="px-3 py-2 text-xs font-semibold bg-blue-600 text-white rounded-lg hover:bg-blue-700 transition-colors"
-                    >
-                      🚚 Duyệt Đơn & Giao Hàng
-                    </button>
-                  )}
-                  {selectedOrder.status === "processing" && (
-                    <button
-                      disabled={updatingId !== null}
-                      onClick={() => handleUpdateStatus(selectedOrder.id, { status: "completed" })}
-                      className="px-3 py-2 text-xs font-semibold bg-emerald-600 text-white rounded-lg hover:bg-emerald-700 transition-colors"
-                    >
-                      ✅ Đã Giao Thành Công
-                    </button>
-                  )}
-                  {selectedOrder.status !== "completed" && selectedOrder.status !== "cancelled" && (
-                    <button
-                      disabled={updatingId !== null}
-                      onClick={() => {
-                        if (confirm("Bạn có chắc chắn muốn huỷ đơn hàng này?")) {
-                          handleUpdateStatus(selectedOrder.id, { status: "cancelled" });
-                        }
-                      }}
-                      className="px-3 py-2 text-xs font-semibold bg-red-100 text-red-700 rounded-lg hover:bg-red-200 transition-colors"
-                    >
-                      ❌ Huỷ Đơn Hàng
-                    </button>
+                {/* ================= VẬN CHUYỂN ================= */}
+                <div className="space-y-2">
+                  <p className="text-xs font-semibold text-slate-600">
+                    🚚 Trạng thái vận chuyển
+                  </p>
+
+                  <div className="flex flex-wrap gap-2">
+                    {(
+                      [
+                        { value: "pending", label: "⏳ Chờ duyệt" },
+                        { value: "processing", label: "🚚 Đang giao" },
+                        { value: "completed", label: "✅ Hoàn thành" },
+                        { value: "cancelled", label: "❌ Đã huỷ" },
+                      ] as const
+                    ).map((item) => (
+                      <button
+                        key={item.value}
+                        disabled={updatingId !== null}
+                        onClick={() => {
+                          if (
+                            item.value === "cancelled" &&
+                            !confirm("Bạn có chắc chắn muốn huỷ đơn hàng này?")
+                          ) {
+                            return;
+                          }
+
+                          handleUpdateStatus(selectedOrder.id, {
+                            status: item.value,
+                          });
+                        }}
+                        className={`px-3 py-2 text-xs font-semibold rounded-lg transition-colors border
+            ${selectedOrder.status === item.value
+                            ? "bg-blue-600 text-white border-blue-600"
+                            : "bg-white text-slate-700 border-slate-200 hover:bg-slate-50"
+                          }`}
+                      >
+                        {item.label}
+                      </button>
+                    ))}
+                  </div>
+                </div>
+
+                {/* ================= THANH TOÁN ================= */}
+                <div className="space-y-2">
+                  <p className="text-xs font-semibold text-slate-600">
+                    💳 Trạng thái thanh toán
+                  </p>
+
+                  <div className="flex flex-wrap gap-2">
+                    {(
+                      [
+                        { value: "pending", label: "⏳ Chưa trả tiền / Nhập số tiền còn thiếu" },
+                        { value: "paid", label: "💰 Đã thu tiền" },
+                        { value: "refunded", label: "🔄 Đã hoàn tiền" },
+                        { value: "failed", label: "❌ Thanh toán thất bại" },
+                      ] as const
+                    ).map((item) => (
+                      <button
+                        key={item.value}
+                        disabled={updatingId !== null}
+                        onClick={() => {
+                          if (item.value === "pending") {
+                            setShowDebtInput(true);
+                            setDebtInput(selectedOrder.debtAmount || 0);
+                            return;
+                          }
+
+                          handleUpdateStatus(selectedOrder.id, {
+                            paymentStatus: item.value,
+                          });
+                        }}
+                        className={`px-3 py-2 text-xs font-semibold rounded-lg transition-colors border
+                          ${selectedOrder.paymentStatus === item.value
+                            ? "bg-emerald-600 text-white border-emerald-600"
+                            : "bg-white text-slate-700 border-slate-200 hover:bg-slate-50"
+                          }`}
+                      >
+                        {item.label}
+                        {item.value === "pending" && selectedOrder.debtAmount > 0 && (
+                          <div className="text-xs text-white-600 font-semibold mt-1">
+                            ⚠️ Khách còn thiếu: {selectedOrder.debtAmount.toLocaleString("vi-VN")} đ
+                          </div>
+                        )}
+                      </button>
+                    ))}
+                  </div>
+
+                  {showDebtInput && (
+                    <div className="mt-3 p-3 border border-orange-200 bg-orange-50 rounded-lg space-y-2">
+                      <p className="text-xs font-semibold text-orange-700">
+                        Nhập số tiền còn thiếu
+                      </p>
+
+                      <input
+                        type="number"
+                        value={debtInput}
+                        onChange={(e) => setDebtInput(Number(e.target.value))}
+                        className="w-full px-3 py-2 border rounded-md text-sm"
+                      />
+
+                      <div className="flex gap-2">
+                        <button
+                          onClick={() => setShowDebtInput(false)}
+                          className="px-3 py-1 text-xs border rounded-md"
+                        >
+                          Huỷ
+                        </button>
+
+                        <button
+                          onClick={() => {
+                            handleUpdateStatus(selectedOrder.id, {
+                              paymentStatus: "pending",
+                              debtAmount: debtInput,
+                            });
+
+                            setShowDebtInput(false);
+                          }}
+                          className="px-3 py-1 text-xs bg-orange-600 text-white rounded-md"
+                        >
+                          Xác nhận
+                        </button>
+                      </div>
+                    </div>
                   )}
 
-                  {/* Hành động cập nhật thanh toán thủ công */}
-                  {selectedOrder.paymentStatus === "pending" && (
-                    <button
-                      disabled={updatingId !== null}
-                      onClick={() => handleUpdateStatus(selectedOrder.id, { paymentStatus: "paid" })}
-                      className="px-3 py-2 text-xs font-semibold bg-slate-800 text-white rounded-lg hover:bg-slate-900 transition-colors"
-                    >
-                      💰 Đánh dấu: Đã Thu Tiền
-                    </button>
-                  )}
-                  {selectedOrder.paymentStatus === "paid" && (
-                    <button
-                      disabled={updatingId !== null}
-                      onClick={() => handleUpdateStatus(selectedOrder.id, { paymentStatus: "refunded" })}
-                      className="px-3 py-2 text-xs font-semibold bg-purple-100 text-purple-700 rounded-lg hover:bg-purple-200 transition-colors"
-                    >
-                      🔄 Đánh dấu: Đã Hoàn Tiền
-                    </button>
-                  )}
                 </div>
               </div>
 
