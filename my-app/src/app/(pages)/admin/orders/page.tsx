@@ -23,6 +23,9 @@ export default function OrdersPage() {
   const [debtInput, setDebtInput] = useState<number | null>(null);
   const [showDebtInput, setShowDebtInput] = useState(false);
 
+  const [filterPaymentStatus, setFilterPaymentStatus] = useState<string>("all");
+
+
   // 1. Lắng nghe danh sách đơn hàng real-time từ Firestore
   useEffect(() => {
     const q = query(collection(db, COLLECTION_NAME), orderBy("createdAt", "desc"));
@@ -90,9 +93,20 @@ export default function OrdersPage() {
     completed: orders.filter(o => o.status === "completed").length,
   };
 
+  //render order
+  // const filteredOrders = orders.filter((order) => {
+  //   if (filterStatus === "all") return true;
+  //   return order.status === filterStatus;
+  // });
+
   const filteredOrders = orders.filter((order) => {
-    if (filterStatus === "all") return true;
-    return order.status === filterStatus;
+    const matchStatus =
+      filterStatus === "all" || order.status === filterStatus;
+
+    const matchPayment =
+      filterPaymentStatus === "all" || order.paymentStatus === filterPaymentStatus;
+
+    return matchStatus && matchPayment;
   });
 
   //6. loc tab
@@ -103,21 +117,29 @@ export default function OrdersPage() {
     completed: orders.filter(o => o.status === "completed").length,
     cancelled: orders.filter(o => o.status === "cancelled").length,
   };
-
   const statusLabel = {
     all: "Tất cả",
-    pending: "Chờ duyệt",
-    processing: "Đang xử lý",
-    completed: "Đã hoàn thành",
+    pending: "Chờ duyệt tay",
+    processing: "Đang xử lý/giao",
+    completed: "Đã giao thành công",
     cancelled: "Đã huỷ",
   };
 
-  const statusLabelPayment = {
-    pending: "Chưa thanh toán",
-    paid: "Đã thanh toán",
-    failed: "Thanh toán thất bại",
+  //filter paymentStatus
+  const paymentStatusCount = {
+    all: orders.length,
+    pending: orders.filter(o => o.paymentStatus === "pending").length,
+    paid: orders.filter(o => o.paymentStatus === "paid").length,
+    failed: orders.filter(o => o.paymentStatus === "failed").length,
+    refunded: orders.filter(o => o.paymentStatus === "refunded").length,
+  };
+  const paymentLabel = {
+    all: "Tất cả",
+    pending: "Chưa trả tiền",
+    paid: "Đã thu tiền",
+    failed: "Thất bại",
     refunded: "Đã hoàn tiền",
-  }
+  };
 
   return (
     <div className="space-y-6">
@@ -160,22 +182,45 @@ export default function OrdersPage() {
               </button>
             ))}
           </div> */}
-          <div className="flex bg-slate-100 p-1 rounded-lg border border-slate-200 w-fit text-xs font-medium select-none">
-            {(
-              ["all", "pending", "processing", "completed", "cancelled"] as const
-            ).map((st) => (
-              <button
-                key={st}
-                onClick={() => setFilterStatus(st)}
-                className={`px-3 py-1.5 rounded-md transition-all ${filterStatus === st
-                  ? "bg-white text-slate-800 shadow-sm font-semibold"
-                  : "text-slate-500 hover:text-slate-800"
-                  }`}
-              >
-                {statusLabel[st]} ({statusCount[st]})
-              </button>
-            ))}
+
+
+          <div className="">
+            <div className="flex bg-slate-100 p-1 rounded-lg border border-slate-200 w-fit text-xs font-medium select-none">
+              <div className="me-2 flex justify-center items-center">🚚  Vận chuyển</div>
+              {(
+                ["all", "pending", "processing", "completed", "cancelled"] as const
+              ).map((st) => (
+                <button
+                  key={st}
+                  onClick={() => setFilterStatus(st)}
+                  className={`px-3 py-1.5 rounded-md transition-all ${filterStatus === st
+                    ? "bg-white text-slate-800 shadow-sm font-semibold"
+                    : "text-slate-500 hover:text-slate-800"
+                    }`}
+                >
+                  {statusLabel[st]} ({statusCount[st]})
+                </button>
+              ))}
+            </div>
+
+            {/* filter paymentStatus */}
+            <div className="flex bg-slate-100 p-1 rounded-lg border border-slate-200 w-fit text-xs font-medium select-none mt-3">
+              <div className="me-2 flex justify-center items-center">💳 Thanh toán</div>
+              {(["all", "pending", "paid", "failed", "refunded"] as const).map((st) => (
+                <button
+                  key={st}
+                  onClick={() => setFilterPaymentStatus(st)}
+                  className={`px-3 py-1.5 rounded-md transition-all ${filterPaymentStatus === st
+                    ? "bg-white text-slate-800 shadow-sm font-semibold"
+                    : "text-slate-500 hover:text-slate-800"
+                    }`}
+                >
+                  {paymentLabel[st]} ({paymentStatusCount[st]})
+                </button>
+              ))}
+            </div>
           </div>
+
         </div>
 
         {/* Bảng hiển thị danh sách */}
@@ -351,8 +396,8 @@ export default function OrdersPage() {
                     {(
                       [
                         { value: "pending", label: "⏳ Chờ duyệt" },
-                        { value: "processing", label: "🚚 Đang giao" },
-                        { value: "completed", label: "✅ Hoàn thành" },
+                        { value: "processing", label: "🚚 Đang xử lý/giao" },
+                        { value: "completed", label: "✅ Đã giao thành công" },
                         { value: "cancelled", label: "❌ Đã huỷ" },
                       ] as const
                     ).map((item) => (

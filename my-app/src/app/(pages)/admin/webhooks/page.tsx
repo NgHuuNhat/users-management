@@ -186,7 +186,7 @@ export default function WebhooksPage() {
                     </td>
 
                     {/* Cột 2: Số tài khoản thụ hưởng */}
-                    <td className="font-semibold py-4 px-4 align-top text-xs sm:text-sm font-mono text-slate-500 select-all pt-4.5">
+                    <td className="font-semibold py-4 px-4 align-top text-xs sm:text-sm font-mono text-slate-500 pt-4.5">
                       {wh.accountNumber}
                       <div className="mt-1.5 w-fit px-2 py-0.5 rounded text-[10px] font-bold tracking-wide uppercase bg-blue-50 text-blue-600 border border-blue-100">
                         {wh.gateway}
@@ -216,10 +216,10 @@ export default function WebhooksPage() {
                             <span className="w-1.5 h-1.5 rounded-full bg-emerald-500"></span>
                             Đã liên kết đơn
                           </span>
-                          <div className="text-[10px] font-mono text-slate-400 select-all block max-w-[200px] truncate">
+                          <div className="text-[10px] font-mono text-slate-400 block max-w-[200px] truncate">
                             Mã đơn: {wh.orderId}
                           </div>
-                          <div className="text-[10px] font-mono text-slate-400 select-all block max-w-[200px] truncate">
+                          <div className="text-[10px] font-mono text-slate-400 block max-w-[200px] truncate">
                             Mã GD Sepay: {wh.transactionId}
                           </div>
                         </div>
