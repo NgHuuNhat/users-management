@@ -35,6 +35,7 @@ export interface Order {
         transactionDate: string,
         content: string,
     },
+    createdAt: any,
 }
 
 export interface User {

@@ -4,6 +4,7 @@ import { useState, useEffect } from "react";
 import { collection, onSnapshot, query, orderBy, doc, updateDoc } from "firebase/firestore";
 import { Webhook } from "@/core/services/types/data-base";
 import { db } from "@/core/services/firebase";
+import { formatDate } from "@/core/features/lib/format-date";
 // import { db } from "@/lib/firebase";
 // import { Webhook } from "@/types";
 
@@ -15,13 +16,13 @@ export default function WebhooksPage() {
   // 1. Lắng nghe dữ liệu webhook real-time từ Firestore
   useEffect(() => {
     const q = query(collection(db, "webhook"), orderBy("transactionDate", "desc"));
-    
+
     const unsubscribe = onSnapshot(q, (snapshot) => {
       const list: (Webhook & { firestoreDocId: string })[] = [];
       snapshot.forEach((docSnap) => {
         const data = docSnap.data() as Webhook;
-        list.push({ 
-          ...data, 
+        list.push({
+          ...data,
           firestoreDocId: docSnap.id // Lấy ID Document của Firestore để dùng khi updateDoc
         });
       });
@@ -36,9 +37,9 @@ export default function WebhooksPage() {
   // 2. Xử lý khớp đơn thủ công khi khách ghi sai nội dung chuyển khoản
   const handleManualMatch = async (firestoreDocId: string, webhookData: Webhook) => {
     const inputOrderId = prompt("Nhập chính xác Mã đơn hàng (Document ID của Order) để khớp thủ công:");
-    
+
     if (!inputOrderId) return; // Khách hủy hoặc không nhập gì
-    
+
     const trimmedOrderId = inputOrderId.trim();
     setProcessingId(firestoreDocId);
 
@@ -120,29 +121,26 @@ export default function WebhooksPage() {
             <h3 className="text-base font-bold text-slate-800 uppercase tracking-tight">Nhật ký tài khoản SePay</h3>
             <p className="text-xs text-slate-400 mt-0.5">Lịch sử nhận tiền thời gian thực từ API Webhook ngân hàng</p>
           </div>
-          
+
           <div className="flex bg-slate-100 p-1 rounded-lg border border-slate-200 w-fit select-none">
             <button
               onClick={() => setFilter("all")}
-              className={`px-3 py-1.5 text-xs font-medium rounded-md transition-all ${
-                filter === "all" ? "bg-white text-slate-800 shadow-sm" : "text-slate-500 hover:text-slate-800"
-              }`}
+              className={`px-3 py-1.5 text-xs font-medium rounded-md transition-all ${filter === "all" ? "bg-white text-slate-800 shadow-sm" : "text-slate-500 hover:text-slate-800"
+                }`}
             >
               Tất cả ({webhooks.length})
             </button>
             <button
               onClick={() => setFilter("matched")}
-              className={`px-3 py-1.5 text-xs font-medium rounded-md transition-all ${
-                filter === "matched" ? "bg-white text-emerald-600 shadow-sm" : "text-slate-500 hover:text-emerald-600"
-              }`}
+              className={`px-3 py-1.5 text-xs font-medium rounded-md transition-all ${filter === "matched" ? "bg-white text-emerald-600 shadow-sm" : "text-slate-500 hover:text-emerald-600"
+                }`}
             >
               Đã khớp đơn ({matchedCount})
             </button>
             <button
               onClick={() => setFilter("unmatched")}
-              className={`px-3 py-1.5 text-xs font-medium rounded-md transition-all ${
-                filter === "unmatched" ? "bg-white text-amber-600 shadow-sm" : "text-slate-500 hover:text-amber-600"
-              }`}
+              className={`px-3 py-1.5 text-xs font-medium rounded-md transition-all ${filter === "unmatched" ? "bg-white text-amber-600 shadow-sm" : "text-slate-500 hover:text-amber-600"
+                }`}
             >
               Chưa khớp ({unmatchedCount})
             </button>
@@ -159,7 +157,8 @@ export default function WebhooksPage() {
             <table className="w-full text-left text-sm border-collapse">
               <thead>
                 <tr className="border-b border-slate-200 text-slate-400 font-medium bg-slate-50/50 text-xs uppercase tracking-wider">
-                  <th className="py-3 px-4">Thời gian / Cổng</th>
+                  <th className="py-3 px-4">Thời gian</th>
+                  <th className="py-3 px-4">Mã GD Sepay</th>
                   <th className="py-3 px-4">Tài khoản nhận</th>
                   <th className="py-3 px-4 text-right">Số tiền nhận</th>
                   <th className="py-3 px-4">Nội dung tin nhắn</th>
@@ -169,18 +168,29 @@ export default function WebhooksPage() {
               <tbody className="divide-y divide-slate-100 text-slate-600">
                 {filteredWebhooks.map((wh) => (
                   <tr key={wh.firestoreDocId} className="hover:bg-slate-50/40 transition-colors">
-                    
-                    {/* Cột 1: Ngày giờ giao dịch & Cổng Ngân hàng */}
+
+                    {/* Cột 1: Ngày giờ giao dịch */}
                     <td className="py-4 px-4 align-top">
-                      <div className="font-medium text-slate-800 text-xs sm:text-sm">{wh.transactionDate}</div>
-                      <div className="mt-1.5 w-fit px-2 py-0.5 rounded text-[10px] font-bold tracking-wide uppercase bg-blue-50 text-blue-600 border border-blue-100">
-                        {wh.gateway}
+                      <div className="font-mono text-xs text-slate-800 font-semibold select-all">
+                        {/* {wh.transactionDate} */}
+                        {/* {'abc'} */}
+                        {formatDate(wh.transactionDate)}
+                      </div>
+                    </td>
+
+                    {/* Cột 1.2: Mã giao dịch sepay */}
+                    <td className="py-4 px-4 align-top">
+                      <div className="font-mono text-xs text-slate-800 font-semibold select-all">
+                        {wh.transactionId}
                       </div>
                     </td>
 
                     {/* Cột 2: Số tài khoản thụ hưởng */}
-                    <td className="py-4 px-4 align-top text-xs sm:text-sm font-mono text-slate-500 select-all pt-4.5">
+                    <td className="font-semibold py-4 px-4 align-top text-xs sm:text-sm font-mono text-slate-500 select-all pt-4.5">
                       {wh.accountNumber}
+                      <div className="mt-1.5 w-fit px-2 py-0.5 rounded text-[10px] font-bold tracking-wide uppercase bg-blue-50 text-blue-600 border border-blue-100">
+                        {wh.gateway}
+                      </div>
                     </td>
 
                     {/* Cột 3: Số tiền cộng vào tài khoản */}
@@ -190,7 +200,7 @@ export default function WebhooksPage() {
 
                     {/* Cột 4: Nội dung tin nhắn chuyển khoản của khách hàng */}
                     <td className="py-4 px-4 align-top max-w-xs break-words">
-                      <div className="text-slate-700 font-medium bg-slate-50 p-2 border border-slate-200 rounded-lg text-xs leading-relaxed font-mono select-all">
+                      <div className="text-slate-700 font-medium bg-slate-50 p-2 border border-slate-200 rounded-lg text-xs leading-relaxed font-mono">
                         {wh.content}
                       </div>
                       <div className="text-[10px] text-slate-400 mt-1 font-mono">
@@ -209,6 +219,9 @@ export default function WebhooksPage() {
                           <div className="text-[10px] font-mono text-slate-400 select-all block max-w-[200px] truncate">
                             Mã đơn: {wh.orderId}
                           </div>
+                          <div className="text-[10px] font-mono text-slate-400 select-all block max-w-[200px] truncate">
+                            Mã GD Sepay: {wh.transactionId}
+                          </div>
                         </div>
                       ) : (
                         <div className="space-y-2">
@@ -216,12 +229,11 @@ export default function WebhooksPage() {
                             <span className="w-1.5 h-1.5 rounded-full bg-amber-500"></span>
                             Chưa khớp / Treo
                           </span>
-                          <button 
+                          <button
                             disabled={processingId === wh.firestoreDocId}
                             onClick={() => handleManualMatch(wh.firestoreDocId, wh)}
-                            className={`block text-xs font-semibold text-blue-600 hover:text-blue-800 hover:underline transition-all ${
-                              processingId === wh.firestoreDocId ? "opacity-40 cursor-wait" : ""
-                            }`}
+                            className={`block text-xs font-semibold text-blue-600 hover:text-blue-800 hover:underline transition-all ${processingId === wh.firestoreDocId ? "opacity-40 cursor-wait" : ""
+                              }`}
                           >
                             {processingId === wh.firestoreDocId ? "⌛ Đang liên kết..." : "🛠️ Khớp đơn thủ công"}
                           </button>

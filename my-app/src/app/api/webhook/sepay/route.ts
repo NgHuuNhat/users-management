@@ -46,7 +46,7 @@ export async function POST(request: Request) {
     const orderIdMatch = content.match(ORDER_REGEX)?.[1];
     
     if (orderIdMatch) {
-      const extractedOrderId = orderIdMatch[0]; // Ví dụ lấy được "DH12345"
+      const extractedOrderId = orderIdMatch; // Ví dụ lấy được "DH12345"
 
       // Tìm đơn hàng trong collection 'order' có ID trùng với mã vừa trích xuất
       const orderRef = doc(db, "orders", extractedOrderId);

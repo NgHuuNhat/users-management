@@ -1,15 +1,17 @@
 "use client";
 
 import { useState, useEffect } from "react";
-import { collection, onSnapshot, query, doc, updateDoc } from "firebase/firestore";
+import { collection, onSnapshot, query, doc, updateDoc, orderBy } from "firebase/firestore";
 import { Order } from "@/core/services/types/data-base";
 import { db } from "@/core/services/firebase";
+import { formatDate } from "@/core/features/lib/format-date";
+// import { formatDate } from "@/core/features/orders/format-date";
 // import { db } from "@/lib/firebase";
 // import { Order } from "@/types";
 
 export default function OrdersPage() {
   // Lưu ý: Đổi tên collection thành "order" (số ít) nếu database của bạn đặt tên dạng số ít
-  const COLLECTION_NAME = "orders"; 
+  const COLLECTION_NAME = "orders";
 
   const [orders, setOrders] = useState<Order[]>([]);
   const [filterStatus, setFilterStatus] = useState<string>("all");
@@ -18,7 +20,8 @@ export default function OrdersPage() {
 
   // 1. Lắng nghe danh sách đơn hàng real-time từ Firestore
   useEffect(() => {
-    const q = query(collection(db, COLLECTION_NAME));
+    const q = query(collection(db, COLLECTION_NAME), orderBy("createdAt", "desc"));
+
     const unsubscribe = onSnapshot(q, (snapshot) => {
       const list: Order[] = [];
       snapshot.forEach((docSnap) => {
@@ -38,7 +41,7 @@ export default function OrdersPage() {
     try {
       const orderRef = doc(db, COLLECTION_NAME, orderId);
       await updateDoc(orderRef, fieldsToUpdate);
-      
+
       // Cập nhật lại state của modal chi tiết nếu đang mở chính đơn hàng đó
       if (selectedOrder && selectedOrder.id === orderId) {
         setSelectedOrder((prev) => prev ? { ...prev, ...fieldsToUpdate } : null);
@@ -87,6 +90,23 @@ export default function OrdersPage() {
     return order.status === filterStatus;
   });
 
+  //6. loc tab
+  const statusCount = {
+    all: orders.length,
+    pending: orders.filter(o => o.status === "pending").length,
+    processing: orders.filter(o => o.status === "processing").length,
+    completed: orders.filter(o => o.status === "completed").length,
+    cancelled: orders.filter(o => o.status === "cancelled").length,
+  };
+
+  const statusLabel = {
+    all: "Tất cả",
+    pending: "Chờ duyệt",
+    processing: "Đang xử lý",
+    completed: "Đã hoàn thành",
+    cancelled: "Đã huỷ",
+  };
+
   return (
     <div className="space-y-6">
       {/* KHỐI MINI STATS THỐNG KÊ ĐƠN HÀNG */}
@@ -116,16 +136,31 @@ export default function OrdersPage() {
             <p className="text-xs text-slate-400 mt-0.5">Theo dõi lịch trình đóng gói, vận chuyển và dòng tiền thu hộ</p>
           </div>
 
-          <div className="flex bg-slate-100 p-1 rounded-lg border border-slate-200 w-fit text-xs font-medium select-none">
+          {/* <div className="flex bg-slate-100 p-1 rounded-lg border border-slate-200 w-fit text-xs font-medium select-none">
             {["all", "pending", "processing", "completed", "cancelled"].map((st) => (
               <button
                 key={st}
                 onClick={() => setFilterStatus(st)}
-                className={`px-3 py-1.5 rounded-md transition-all capitalize ${
-                  filterStatus === st ? "bg-white text-slate-800 shadow-sm font-semibold" : "text-slate-500 hover:text-slate-800"
-                }`}
+                className={`px-3 py-1.5 rounded-md transition-all capitalize ${filterStatus === st ? "bg-white text-slate-800 shadow-sm font-semibold" : "text-slate-500 hover:text-slate-800"
+                  }`}
               >
                 {st === "all" ? "Tất cả" : st === "pending" ? "Chờ duyệt" : st === "processing" ? "Đang xử lý" : st === "completed" ? "Đã xong" : "Đã huỷ"}
+              </button>
+            ))}
+          </div> */}
+          <div className="flex bg-slate-100 p-1 rounded-lg border border-slate-200 w-fit text-xs font-medium select-none">
+            {(
+              ["all", "pending", "processing", "completed", "cancelled"] as const
+            ).map((st) => (
+              <button
+                key={st}
+                onClick={() => setFilterStatus(st)}
+                className={`px-3 py-1.5 rounded-md transition-all ${filterStatus === st
+                  ? "bg-white text-slate-800 shadow-sm font-semibold"
+                  : "text-slate-500 hover:text-slate-800"
+                  }`}
+              >
+                {statusLabel[st]} ({statusCount[st]})
               </button>
             ))}
           </div>
@@ -139,6 +174,7 @@ export default function OrdersPage() {
             <table className="w-full text-left text-sm border-collapse">
               <thead>
                 <tr className="border-b border-slate-200 text-slate-400 font-medium bg-slate-50/50 text-xs uppercase tracking-wider">
+                  <th className="py-3 px-4">Thời gian</th>
                   <th className="py-3 px-4">Mã Đơn Hàng (ID)</th>
                   <th className="py-3 px-4">Khách Hàng</th>
                   <th className="py-3 px-4 text-right">Tổng Tiền Đơn</th>
@@ -150,6 +186,13 @@ export default function OrdersPage() {
               <tbody className="divide-y divide-slate-100 text-slate-600">
                 {filteredOrders.map((order) => (
                   <tr key={order.id} className="hover:bg-slate-50/40 transition-colors">
+                    {/* Cột 0: Thời gian */}
+                    <td className="py-4 px-4 font-mono text-xs text-slate-800 font-semibold select-all">
+                      {/* {order.createdAt} */}
+                      {/* {order.createdAt?.toDate().toLocaleString("vi-VN")} */}
+                      {formatDate(order.createdAt)}
+                    </td>
+
                     {/* Cột 1: Mã Đơn */}
                     <td className="py-4 px-4 font-mono text-xs text-slate-800 font-semibold select-all">
                       {order.id}
@@ -159,6 +202,9 @@ export default function OrdersPage() {
                     <td className="py-4 px-4">
                       <div className="font-semibold text-slate-800">{order.customer?.name || "Ẩn danh"}</div>
                       <div className="text-xs text-slate-400 mt-0.5">{order.customer?.phone}</div>
+                      <div className="text-xs text-slate-400 mt-0.5">{order.customer?.address}</div>
+                      <div className="text-xs text-slate-400 mt-0.5">{order.customer?.email}</div>
+                      {/* <div className="text-xs text-slate-400 mt-0.5">{order.customer?.email}</div> */}
                     </td>
 
                     {/* Cột 3: Tổng số tiền */}
@@ -197,13 +243,13 @@ export default function OrdersPage() {
       {selectedOrder && (
         <div className="fixed inset-0 bg-slate-900/60 backdrop-blur-sm flex items-center justify-center z-50 p-4 animate-fade-in">
           <div className="bg-white rounded-2xl w-full max-w-2xl shadow-2xl border border-slate-100 max-h-[90vh] overflow-y-auto flex flex-col">
-            
+
             {/* Modal Header */}
             <div className="p-5 border-b border-slate-100 flex items-center justify-between bg-slate-50 rounded-t-2xl">
               <div>
                 <h4 className="text-sm font-mono font-bold text-slate-400">CHI TIẾT ĐƠN: <span className="text-slate-800 text-xs select-all bg-white px-2 py-0.5 border border-slate-200 rounded">{selectedOrder.id}</span></h4>
               </div>
-              <button 
+              <button
                 onClick={() => setSelectedOrder(null)}
                 className="w-8 h-8 rounded-full bg-slate-200/60 text-slate-500 hover:bg-red-500 hover:text-white transition-colors flex items-center justify-center text-sm font-bold"
               >
@@ -213,7 +259,7 @@ export default function OrdersPage() {
 
             {/* Modal Body */}
             <div className="p-6 space-y-6 flex-1 overflow-y-auto">
-              
+
               {/* Phần A: Thông tin giao hàng */}
               <div className="grid grid-cols-1 sm:grid-cols-2 gap-4 bg-slate-50 p-4 rounded-xl border border-slate-100">
                 <div>
@@ -275,7 +321,7 @@ export default function OrdersPage() {
               {/* Phần D: THANH ĐIỀU KHIỂN HÀNH ĐỘNG DÀNH CHO ADMIN */}
               <div className="border-t border-slate-100 pt-4 space-y-3">
                 <span className="text-[10px] font-bold text-slate-400 uppercase tracking-wide block">Bảng điều khiển trạng thái (Admin Action)</span>
-                
+
                 <div className="flex flex-wrap gap-2">
                   {/* Hành động vận chuyển */}
                   {selectedOrder.status === "pending" && (
