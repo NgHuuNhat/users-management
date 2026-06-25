@@ -17,7 +17,7 @@ export interface OrderItem {
     [key: string]: any
 }
 
-interface Order {
+export interface Order {
     id: string
     items: OrderItem[]
     amount: number
@@ -33,6 +33,7 @@ interface Order {
         transferAmount: number,
         transactionId: number,
         bankTime: string,
+        content: string,
     },
 }
 
