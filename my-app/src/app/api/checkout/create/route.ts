@@ -14,17 +14,14 @@ export async function POST(req: NextRequest) {
       items: ['item1', 'item2', 'item3', ...items],
       amount,
       status: 'pending',
-      transactionId: null,
-      paidAt: null,
-      amountReceived: null,
-      createdAt: serverTimestamp(),
-      error: null,
       paymentStatus: 'pending',
       customer: {
         name: 'Nguyễn Hữu Nhật',
         phone: '0985627061',
         address: '123 Đường ABC, Phường XYZ, Quận 1, TP.HCM',
+        email: 'nhat200901@gmail.com'
       },
+      createdAt: serverTimestamp(),
     });
 
     const orderId = orderRef.id;

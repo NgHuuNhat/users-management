@@ -43,12 +43,13 @@ export async function updateOrder(rawBody: string) {
 
     // Cập nhật trạng thái thanh toán thành công
     await updateDoc(orderRef, {
+      bank: {
+        transferAmount: amount,
+        transactionId: transactionId,
+        bankTime: bankTime,
+      },
       paymentStatus: 'paid',
-      amountReceived: amount,
-      transactionId,
-      bankTime,
       paidAt: serverTimestamp(),
-      error: null,
     });
 
     return { success: true, message: 'Thanh toán thành công' };
