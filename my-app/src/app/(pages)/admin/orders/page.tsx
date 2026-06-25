@@ -5,9 +5,11 @@ import { collection, onSnapshot, query, doc, updateDoc, orderBy } from "firebase
 import { Order } from "@/core/services/types/data-base";
 import { db } from "@/core/services/firebase";
 import { formatDate } from "@/core/features/lib/format-date";
+import { formatMoney, parseMoney } from "@/core/features/lib/format-money";
 // import { formatDate } from "@/core/features/orders/format-date";
 // import { db } from "@/lib/firebase";
 // import { Order } from "@/types";
+import { NumericFormat } from "react-number-format";
 
 export default function OrdersPage() {
   // Lưu ý: Đổi tên collection thành "order" (số ít) nếu database của bạn đặt tên dạng số ít
@@ -18,7 +20,7 @@ export default function OrdersPage() {
   const [selectedOrder, setSelectedOrder] = useState<Order | null>(null);
   const [updatingId, setUpdatingId] = useState<string | null>(null);
 
-  const [debtInput, setDebtInput] = useState<number>(0);
+  const [debtInput, setDebtInput] = useState<number | null>(null);
   const [showDebtInput, setShowDebtInput] = useState(false);
 
   // 1. Lắng nghe danh sách đơn hàng real-time từ Firestore
@@ -426,18 +428,62 @@ export default function OrdersPage() {
                     ))}
                   </div>
 
+                  {/* nhap no */}
                   {showDebtInput && (
                     <div className="mt-3 p-3 border border-orange-200 bg-orange-50 rounded-lg space-y-2">
                       <p className="text-xs font-semibold text-orange-700">
                         Nhập số tiền còn thiếu
                       </p>
 
-                      <input
+                      {/* <input
                         type="number"
                         value={debtInput}
                         onChange={(e) => setDebtInput(Number(e.target.value))}
                         className="w-full px-3 py-2 border rounded-md text-sm"
+                      /> */}
+
+                      {/* <input
+                        type="text"
+                        value={debtInput.toLocaleString("vi-VN")}
+                        onChange={(e) => {
+                          const raw = e.target.value.replace(/\D/g, "");
+                          setDebtInput(Number(raw || 0));
+                        }}
+                        className="w-full px-3 py-2 border rounded-md text-sm"
+                      /> */}
+
+                      {/* <input
+                        type="text"
+                        value={formatMoney(debtInput)}
+                        onChange={(e) => {
+                          setDebtInput(parseMoney(e.target.value));
+                        }}
+                        className="w-full px-3 py-2 border rounded-md text-sm"
+                      /> */}
+                      {/* <NumericFormat
+                        value={debtInput}
+                        thousandSeparator="."
+                        decimalSeparator=","
+                        allowNegative={false}
+                        onValueChange={(values) => {
+                          setDebtInput(Number(values.value));
+                        }}
+                        // customInput="input"
+                        className="w-full px-3 py-2 border rounded-md text-sm"
+                      /> */}
+
+                      <NumericFormat
+                        value={debtInput ?? ""}
+                        thousandSeparator
+                        decimalScale={0}
+                        allowNegative={false}
+                        onValueChange={(values) => {
+                          setDebtInput(values.floatValue ?? null);
+                        }}
+                        className="w-full px-3 py-2 border rounded-md text-sm"
                       />
+
+
 
                       <div className="flex gap-2">
                         <button
