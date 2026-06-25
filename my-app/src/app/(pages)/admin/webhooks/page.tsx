@@ -206,7 +206,7 @@ export default function WebhooksPage() {
                             <span className="w-1.5 h-1.5 rounded-full bg-emerald-500"></span>
                             Đã liên kết đơn
                           </span>
-                          <div className="text-[10px] font-mono text-slate-400 select-all block max-w-[150px] truncate">
+                          <div className="text-[10px] font-mono text-slate-400 select-all block max-w-[200px] truncate">
                             Mã đơn: {wh.orderId}
                           </div>
                         </div>
