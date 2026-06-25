@@ -47,6 +47,7 @@ export async function updateOrder(rawBody: string) {
         transferAmount: amount,
         transactionId: transactionId,
         bankTime: bankTime,
+        content: content,
       },
       paymentStatus: 'paid',
       paidAt: serverTimestamp(),

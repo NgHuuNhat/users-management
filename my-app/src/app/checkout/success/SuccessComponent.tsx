@@ -12,7 +12,6 @@ function money(amount: number) {
 export default function SuccessComponent() {
     const searchParams = useSearchParams();
     const orderId = searchParams.get('orderId');
-
     const [order, setOrder] = useState<any>(null);
 
     useEffect(() => {
@@ -38,19 +37,29 @@ export default function SuccessComponent() {
                 </h1>
 
                 <p className="mt-3 text-4xl font-bold text-green-600">
-                    {order?.amountReceived
-                        ? money(order.amountReceived)
+                    {order?.bank?.transferAmount
+                        ? money(order.bank.transferAmount)
                         : '..'}
                 </p>
 
                 <div className="mt-8 space-y-3 text-left">
                     <div className="rounded-2xl bg-white p-4 shadow-sm">
-                        Mã đơn: {orderId}
+                        Mã đơn hàng: {orderId}
                     </div>
 
                     <div className="rounded-2xl bg-white p-4 shadow-sm">
                         Mã giao dịch:{' '}
-                        {order?.transactionId ?? '..'}
+                        {order?.bank?.transactionId ?? '..'}
+                    </div>
+
+                    <div className="rounded-2xl bg-white p-4 shadow-sm">
+                        Nội dung:{' '}
+                        {order?.bank?.content ?? '..'}
+                    </div>
+
+                    <div className="rounded-2xl bg-white p-4 shadow-sm">
+                        Thời gian:{' '}
+                        {order?.bank?.bankTime?.toDate().toLocaleString('vi-VN') ?? '..'}
                     </div>
                 </div>
 
