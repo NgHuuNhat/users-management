@@ -4,6 +4,7 @@ import { useState, useEffect } from "react";
 import { collection, addDoc, onSnapshot, query } from "firebase/firestore";
 import { Product } from "@/core/services/types/data-base";
 import { db } from "@/core/services/firebase";
+import { NumericFormat } from "react-number-format";
 // import { db } from "@/lib/firebase"; 
 // import { Product } from "@/types";
 
@@ -15,14 +16,14 @@ export default function ProductsPage() {
   // Trạng thái Form theo đúng cấu trúc dữ liệu Product (loại trừ id tự sinh)
   const [formData, setFormData] = useState<Omit<Product, "id">>({
     name: "",
-    price: 0,
+    price: null,
     image: "",
     description: "",
   });
 
   // 1. Lắng nghe danh sách sản phẩm real-time từ Firestore
   useEffect(() => {
-    const q = query(collection(db, "product"));
+    const q = query(collection(db, "products"));
     const unsubscribe = onSnapshot(q, (snapshot) => {
       const list: Product[] = [];
       snapshot.forEach((doc) => {
@@ -58,7 +59,7 @@ export default function ProductsPage() {
       }
 
       // Đẩy thẳng object formData sạch lên Firestore collection 'product'
-      await addDoc(collection(db, "product"), formData);
+      await addDoc(collection(db, "products"), formData);
 
       // Reset Form về trạng thái ban đầu
       setFormData({ name: "", price: 0, image: "", description: "" });
@@ -96,13 +97,38 @@ export default function ProductsPage() {
 
           <div>
             <label className="block text-xs font-semibold text-slate-600 uppercase mb-1">Giá bán (VNĐ)</label>
-            <input
+            {/* <input
               type="number"
               name="price"
               value={formData.price || ""}
               onChange={handleInputChange}
               placeholder="Ví dụ: 450000"
               className="w-full px-3 py-2 border border-slate-200 rounded-lg text-sm focus:outline-none focus:ring-2 focus:ring-blue-500 bg-slate-50 focus:bg-white"
+            />
+            <NumericFormat
+              value={debtInput ?? ""}
+              thousandSeparator
+              decimalScale={0}
+              allowNegative={false}
+              onValueChange={(values) => {
+                setDebtInput(values.floatValue ?? null);
+              }}
+              className="w-full px-3 py-2 border rounded-md text-sm"
+            /> */}
+            <NumericFormat
+              value={formData.price ?? ""}
+              thousandSeparator="."
+              decimalSeparator=","
+              decimalScale={0}
+              allowNegative={false}
+              placeholder="Ví dụ: 450000"
+              className="w-full px-3 py-2 border border-slate-200 rounded-lg text-sm focus:outline-none focus:ring-2 focus:ring-blue-500 bg-slate-50 focus:bg-white"
+              onValueChange={(values) => {
+                setFormData((prev) => ({
+                  ...prev,
+                  price: values.floatValue ?? null,
+                }));
+              }}
             />
           </div>
 

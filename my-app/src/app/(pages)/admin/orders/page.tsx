@@ -326,7 +326,7 @@ export default function OrdersPage() {
                     <div>Mã giao dịch: <span className="font-bold text-slate-800">{selectedOrder.bank.transactionId}</span></div>
                     <div>Số tiền nhận: <span className="font-bold text-emerald-600">+{selectedOrder.bank.transferAmount?.toLocaleString("vi-VN")} đ</span></div>
                     <div className="col-span-2">Thời gian: {selectedOrder.bank.transactionDate}</div>
-                    <div className="col-span-2 truncate">Nội dung chuyển: "{selectedOrder.bank.content}"</div>
+                    <div className="col-span-2">Nội dung chuyển: "{selectedOrder.bank.content}"</div>
                   </div>
                 </div>
               ) : (
