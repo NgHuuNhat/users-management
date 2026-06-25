@@ -44,7 +44,7 @@ export default function WebhooksPage() {
 
     try {
       // BƯỚC A: Cập nhật thông tin thanh toán vào đúng Đơn hàng trong bảng 'order'
-      const orderRef = doc(db, "order", trimmedOrderId);
+      const orderRef = doc(db, "orders", trimmedOrderId);
       await updateDoc(orderRef, {
         paymentStatus: "paid",
         status: "processing", // Chuyển trạng thái đơn sang Đang xử lý

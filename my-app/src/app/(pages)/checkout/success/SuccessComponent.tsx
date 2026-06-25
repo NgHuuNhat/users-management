@@ -37,7 +37,7 @@ export default function SuccessComponent() {
                 </h1>
 
                 <p className="mt-3 text-4xl font-bold text-green-600">
-                    {order?.bank?.transferAmount
+                    + {order?.bank?.transferAmount
                         ? money(order.bank.transferAmount)
                         : '..'}
                 </p>
