@@ -3,6 +3,8 @@ import { collection, addDoc, query, where, getDocs, updateDoc, doc } from "fireb
 import { db } from "@/core/services/firebase";
 // import { db } from "@/lib/firebase";
 
+const ORDER_REGEX = /SEVQR\s*ORDER\s*([A-Za-z0-9]+)/i;
+
 export async function POST(request: Request) {
   try {
     // 1. Lấy dữ liệu SePay bắn về
@@ -40,7 +42,8 @@ export async function POST(request: Request) {
     // Giả sử nội dung chuyển khoản của bạn có chứa Mã đơn hàng dạng: "DH12345" hoặc "12345"
     // Ta sẽ dùng Regex để trích xuất mã đơn hàng ra từ trường body.content
     const content = body.content || "";
-    const orderIdMatch = content.match(/DH\d+|ORDER_\d+/i); // Tìm chữ DH... hoặc ORDER_... tùy bạn quy định
+    // const orderIdMatch = content.match(/DH\d+|ORDER_\d+/i); // Tìm chữ DH... hoặc ORDER_... tùy bạn quy định
+    const orderIdMatch = content.match(ORDER_REGEX)?.[1];
     
     if (orderIdMatch) {
       const extractedOrderId = orderIdMatch[0]; // Ví dụ lấy được "DH12345"
