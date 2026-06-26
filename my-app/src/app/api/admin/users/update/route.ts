@@ -10,11 +10,29 @@ export async function POST(req: NextRequest) {
       phone,
       role,
       isActive,
+      password,
     } = await req.json();
 
-    await adminAuth.updateUser(uid, {
+    // Tạo object chứa dữ liệu cần update cho Firebase Auth
+    const updateData: any = {
       email,
-    });
+    };
+
+    // Validate password trước
+    if (password?.trim() && password.trim().length < 6) {
+      throw new Error("Mật khẩu phải có ít nhất 6 ký tự");
+    }
+
+    // Chỉ thêm password nếu có nhập
+    if (password?.trim()) {
+      updateData.password = password.trim();
+    }
+
+    await adminAuth.updateUser(uid, updateData);
+
+    // await adminAuth.updateUser(uid, {
+    //   email,
+    // });
 
     await adminDb
       .collection("users")

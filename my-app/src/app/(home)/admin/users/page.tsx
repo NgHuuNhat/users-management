@@ -33,7 +33,10 @@ export default function UsersPage() {
     phone: "",
     role: "user" as "admin" | "user",
     isActive: true,
+    password: "",
   });
+
+  const [error, setError] = useState("");
 
   // Lắng nghe realtime danh sách user
   useEffect(() => {
@@ -77,6 +80,7 @@ export default function UsersPage() {
 
   // Mở modal edit
   const handleOpenEdit = (user: User) => {
+    setError("");
     setEditingUser(user);
 
     setFormData({
@@ -85,6 +89,7 @@ export default function UsersPage() {
       phone: user.phone || "",
       role: user.role || "user",
       isActive: user.isActive ?? true,
+      password: "",
     });
 
   };
@@ -118,6 +123,7 @@ export default function UsersPage() {
           phone: formData.phone.trim(),
           role: formData.role,
           isActive: formData.isActive,
+          password: formData.password.trim(),
         }),
       });
 
@@ -130,8 +136,9 @@ export default function UsersPage() {
 
       setEditingUser(null);
 
-    } catch (error) {
+    } catch (error: any) {
       console.error("Lỗi cập nhật user:", error);
+      setError(error.message || "Có lỗi xảy ra.");
 
     } finally {
       setSaving(false);
@@ -342,6 +349,10 @@ export default function UsersPage() {
             </p>
           </div>
 
+          <div className="min-h-10 px-3 py-2 rounded-lg bg-red-50 border border-red-200 text-red-600 text-sm">
+            {error ? error : ''}
+          </div>
+
           <div className="p-6 space-y-5">
 
             <div>
@@ -390,6 +401,38 @@ export default function UsersPage() {
       focus:bg-white
     "
               />
+            </div>
+
+            <div>
+              <label className="block text-sm font-medium text-slate-700 mb-2">
+                Mật khẩu mới
+              </label>
+
+              <input
+                type="password"
+                value={formData.password}
+                onChange={(e) =>
+                  setFormData({
+                    ...formData,
+                    password: e.target.value,
+                  })
+                }
+                placeholder="Để trống nếu không đổi mật khẩu"
+                className="
+      w-full px-3 py-2
+      border border-slate-200
+      rounded-lg
+      bg-slate-50
+      focus:outline-none
+      focus:ring-2
+      focus:ring-blue-500
+      focus:bg-white
+    "
+              />
+
+              <p className="mt-1 text-xs text-slate-400">
+                Để trống nếu không muốn thay đổi mật khẩu.
+              </p>
             </div>
 
             <div>
