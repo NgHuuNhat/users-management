@@ -5,6 +5,7 @@ import { OrderItem } from "@/core/services/types/data-base";
 import { getPusherClient } from "@/core/features/checkout/pusher-client";
 import { doc, onSnapshot } from "firebase/firestore";
 import { useEffect, useState } from "react";
+import { formatDate } from "@/core/features/lib/format-date";
 
 interface Props {
   open: boolean;
@@ -201,6 +202,7 @@ export default function Cart({
     >
       {/* --- PHẦN DRAWER GIỎ HÀNG BÊN PHẢI --- */}
       <div className="p-8 flex flex-col h-full">
+
         <div className="flex justify-between">
           {/* <h2 className="text-3xl font-semibold">Giỏ hàng</h2> */}
           {/* <h2 className="text-3xl font-semibold flex items-center gap-2 text-yellow-500 drop-shadow-sm">
@@ -209,25 +211,29 @@ export default function Cart({
           </h2> */}
           {/* <button onClick={onClose} className="bg-black text-white">✕</button> */}
 
-          <h2 className="text-3xl font-semibold flex items-center gap-2 text-yellow-500">
+          {/* <h2 className="text-3xl font-semibold flex items-center gap-2 text-yellow-500">
             <span>🛒</span>
             <span>Giỏ hàng</span>
+          </h2> */}
+
+          <h2 className="text-2xl font-semibold flex items-center gap-1 text-black">
+            <span>Giỏ hàng của bạn</span>
           </h2>
 
           <button
             onClick={onClose}
             className="
             cursor-pointer
-    w-10 h-10
-    rounded-full
-    bg-black text-white
-    flex items-center justify-center
-    text-lg
-    hover:bg-zinc-800
-    active:scale-95
-    transition
-    shadow-sm
-  "
+            w-10 h-10
+            rounded-full
+            bg-black text-white
+            flex items-center justify-center
+            text-lg
+            hover:bg-zinc-800
+            active:scale-95
+            transition
+            shadow-sm
+          "
           >
             ✕
           </button>
@@ -357,7 +363,7 @@ export default function Cart({
                 </div>
 
                 <div className="mt-4 text-sm bg-zinc-50 p-4 rounded-2xl w-full text-left space-y-1.5 border">
-                  <p>• Mã đơn hàng: <strong className="text-blue-600">SEVQR ORDER {orderId.slice(-4).toUpperCase()}</strong></p>
+                  <p>• Mã đơn hàng: <strong className="text-blue-600">{orderId.slice(-4).toUpperCase()}</strong></p>
                   <p className="text-xs text-amber-600 pt-1 italic">* Hệ thống tự động chuyển màn hình ngay sau khi nhận được tiền (thường mất 1-3 giây).</p>
                 </div>
 
@@ -384,7 +390,7 @@ export default function Cart({
                 >
                   {loadingOrder ? "Đang xử lý..." : "Chọn thanh toán khi nhận hàng"}
                 </button>
-                
+
               </div>
             )}
 
@@ -409,33 +415,54 @@ export default function Cart({
                     </strong>
                   </p>
 
-                  <p>
-                    • Mã giao dịch:{" "}
-                    <strong className="text-black">
-                      {order?.bank?.transactionId ?? '..'}
-                    </strong>
-                  </p>
+                  {order?.bank?.transactionId ? (
+                    <div>
+                      <div>thanh toan online thi hien</div>
+                      <div>
+                        <p>
+                          • Mã giao dịch:{" "}
+                          <strong className="text-black">
+                            {order?.bank?.transactionId ?? '..'}
+                          </strong>
+                        </p>
 
-                  <p>
-                    • Số tiền thanh toán:{" "}
-                    <strong className="text-emerald-600">
-                      {order?.bank?.transferAmount?.toLocaleString("vi-VN") ?? '..'} ₫
-                    </strong>
-                  </p>
+                        <p>
+                          • Số tiền thanh toán:{" "}
+                          <strong className="text-emerald-600">
+                            {order?.bank?.transferAmount?.toLocaleString("vi-VN") ?? '..'} ₫
+                          </strong>
+                        </p>
 
-                  <p>
-                    • Nội dung:{" "}
-                    <strong className="text-emerald-600">
-                      {order?.bank?.content ?? '..'}
-                    </strong>
-                  </p>
+                        <p>
+                          • Nội dung:{" "}
+                          <strong className="text-emerald-600">
+                            {order?.bank?.content ?? '..'}
+                          </strong>
+                        </p>
 
-                  <p>
-                    • Thời gian:{" "}
-                    <strong className="text-black">
-                      {order?.bank?.transactionDate ?? '..'}
-                    </strong>
-                  </p>
+                        <p>
+                          • Thời gian:{" "}
+                          <strong className="text-black">
+                            {order?.bank?.transactionDate ?? '..'}
+                          </strong>
+                        </p>
+                      </div>
+                    </div>
+                  ) : (
+                    <div>
+                      <div>thanh toan tien mat thi hien</div>
+                      <div>
+                        <p>
+                          • Thời gian:{" "}
+                          <strong className="text-black">
+                            {/* {new Date().toLocaleTimeString("vi-VN")} */}
+                            {formatDate(order?.createdAt)}
+                          </strong>
+                        </p>
+                      </div>
+                    </div>
+                  )}
+
                 </div>
 
                 <p className="text-gray-500 max-w-md mx-auto text-sm">

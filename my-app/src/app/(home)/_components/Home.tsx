@@ -174,7 +174,7 @@ export default function Home({
                         )}
                     </button> */}
 
-                    <button
+                    {/* <button
                         onClick={onOpenCart}
                         className="cursor-pointer relative flex items-center gap-2 px-4 py-2 rounded-full bg-yellow-400 text-black font-semibold text-sm shadow-md hover:bg-yellow-300 hover:shadow-lg active:scale-95 transition-all duration-200"
                     >
@@ -183,6 +183,34 @@ export default function Home({
 
                         {cartCount > 0 && (
                             <span className="absolute -top-2 -right-2 min-w-5 h-5 px-1 rounded-full bg-red-500 text-white text-[11px] flex items-center justify-center shadow-md">
+                                {cartCount}
+                            </span>
+                        )}
+                    </button> */}
+
+                    {/* <button
+                        onClick={onOpenCart}
+                        className="relative flex items-center gap-1 px-3 py-2 rounded-full bg-yellow-400 text-black text-sm font-medium shadow-sm hover:bg-yellow-300 active:scale-95 transition"
+                    >
+                        <span>🛒</span>
+                        <span>Giỏ hàng</span>
+
+                        {cartCount > 0 && (
+                            <span className="absolute -top-1 -right-1 min-w-4 h-4 px-1 rounded-full bg-red-500 text-white text-[10px] flex items-center justify-center">
+                                {cartCount}
+                            </span>
+                        )}
+                    </button> */}
+
+                    <button
+                        onClick={onOpenCart}
+                        className="relative flex items-center gap-1 px-3 py-2 rounded-full bg-white text-black text-sm font-medium shadow-sm border border-zinc-200 hover:bg-zinc-50 active:scale-95 transition"
+                    >
+                        <span>🛒</span>
+                        <span>Giỏ hàng</span>
+
+                        {cartCount > 0 && (
+                            <span className="absolute -top-1 -right-1 min-w-4 h-4 px-1 rounded-full bg-red-500 text-white text-[10px] flex items-center justify-center shadow">
                                 {cartCount}
                             </span>
                         )}
