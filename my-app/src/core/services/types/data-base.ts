@@ -36,7 +36,9 @@ export interface Order {
         content: string,
     },
     createdAt: any,
-    debtAmount?: any; // số tiền còn thiếu number
+    debtAmount?: any; // số tiền còn nợ number
+    cashReceivedManual?: number; //số tiền mặt đã nhận
+    historyDebtAmount?: number;  // nợ từng có
 }
 
 export interface User {

@@ -90,7 +90,7 @@ export default function WebhooksPage() {
       <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
         <div className="bg-white p-5 rounded-xl border border-slate-200 shadow-sm flex items-center justify-between">
           <div>
-            <p className="text-xs font-semibold text-slate-400 uppercase tracking-wider">Tổng doanh thu SePay</p>
+            <p className="text-xs font-semibold text-slate-400 uppercase tracking-wider">Tổng số tiền nhận (SePay)</p>
             <h4 className="text-xl font-bold text-slate-800 mt-1">{totalRevenue.toLocaleString("vi-VN")} đ</h4>
           </div>
           <div className="w-10 h-10 rounded-lg bg-green-50 flex items-center justify-center text-green-600 text-xl font-bold">💰</div>
@@ -135,14 +135,14 @@ export default function WebhooksPage() {
               className={`px-3 py-1.5 text-xs font-medium rounded-md transition-all ${filter === "matched" ? "bg-white text-emerald-600 shadow-sm" : "text-slate-500 hover:text-emerald-600"
                 }`}
             >
-              Đã khớp đơn ({matchedCount})
+              Hệ thống tự động khớp ({matchedCount})
             </button>
             <button
               onClick={() => setFilter("unmatched")}
               className={`px-3 py-1.5 text-xs font-medium rounded-md transition-all ${filter === "unmatched" ? "bg-white text-amber-600 shadow-sm" : "text-slate-500 hover:text-amber-600"
                 }`}
             >
-              Chưa khớp ({unmatchedCount})
+              Giao dịch treo (Sai nội dung) ({unmatchedCount})
             </button>
           </div>
         </div>
@@ -160,7 +160,7 @@ export default function WebhooksPage() {
                   <th className="py-3 px-4">Thời gian</th>
                   <th className="py-3 px-4">Mã GD Sepay</th>
                   <th className="py-3 px-4">Tài khoản nhận</th>
-                  <th className="py-3 px-4 text-right">Số tiền nhận</th>
+                  <th className="py-3 px-4 text-right">Số tiền nhận (Sepay)</th>
                   <th className="py-3 px-4">Nội dung tin nhắn</th>
                   <th className="py-3 px-4">Trạng thái xử lý</th>
                 </tr>
@@ -183,6 +183,14 @@ export default function WebhooksPage() {
                       <div className="font-mono text-xs text-slate-800 font-semibold select-all">
                         {wh.transactionId}
                       </div>
+                      <div>
+                        <div className="text-[10px] font-mono text-slate-400 block max-w-[200px] truncate">
+                          Mã đơn: {wh.orderId}
+                        </div>
+                        <div className="text-[10px] font-mono text-slate-400 block max-w-[200px] truncate">
+                          Mã GD Sepay: {wh.transactionId}
+                        </div>
+                      </div>
                     </td>
 
                     {/* Cột 2: Số tài khoản thụ hưởng */}
@@ -203,15 +211,15 @@ export default function WebhooksPage() {
                       <div className="text-slate-700 font-medium bg-slate-50 p-2 border border-slate-200 rounded-lg text-xs leading-relaxed font-mono">
                         {wh.content}
                       </div>
-                      <div className="text-[10px] text-slate-400 mt-1 font-mono">
+                      {/* <div className="text-[10px] text-slate-400 mt-1 font-mono">
                         Mã GD SePay: {wh.transactionId}
-                      </div>
+                      </div> */}
                     </td>
 
                     {/* Cột 5: Trạng thái và nút xử lý đối soát */}
                     <td className="py-4 px-4 align-top">
                       {wh.orderId ? (
-                        <div className="space-y-1">
+                        <div className="space-y-0">
                           <span className="inline-flex items-center gap-1 px-2.5 py-1 rounded-full text-xs font-semibold bg-emerald-50 text-emerald-700 border border-emerald-200">
                             <span className="w-1.5 h-1.5 rounded-full bg-emerald-500"></span>
                             Đã liên kết đơn

@@ -69,7 +69,7 @@ export default function OrdersPage() {
       completed: "bg-emerald-50 text-emerald-700 border-emerald-200",
       cancelled: "bg-red-50 text-red-700 border-red-200",
     };
-    const labels = { pending: "Chờ duyệt", processing: "Đang giao", completed: "Đã hoàn thành", cancelled: "Đã hủy" };
+    const labels = { pending: "Chờ duyệt", processing: "Đang xử lý/giao", completed: "Đã hoàn thành", cancelled: "Đã hủy" };
     return <span className={`px-2.5 py-1 text-xs font-semibold rounded-full border ${badges[status]}`}>{labels[status]}</span>;
   };
 
@@ -81,7 +81,7 @@ export default function OrdersPage() {
       failed: "bg-red-50 text-red-700 border-red-200",
       refunded: "bg-purple-50 text-purple-700 border-purple-200",
     };
-    const labels = { pending: "Chưa trả tiền", paid: "Đã thu tiền", failed: "Thất bại", refunded: "Đã hoàn tiền" };
+    const labels = { pending: "Chưa trả tiền", paid: "Đã thu tiền", failed: "Thanh toán thất bại", refunded: "Đã hoàn tiền" };
     return <span className={`px-2.5 py-1 text-xs font-semibold rounded-full border ${badges[status]}`}>{labels[status]}</span>;
   };
 
@@ -92,6 +92,99 @@ export default function OrdersPage() {
     processing: orders.filter(o => o.status === "processing").length,
     completed: orders.filter(o => o.status === "completed").length,
   };
+
+  // 6. thống kế tổng tiền đơn, tông tiền nhận sepay, còn thiếu
+  // const moneyMetrics = {
+  //   totalOrderAmount: orders.reduce((sum, o) => sum + (o.amount || 0), 0),
+
+  //   totalSePayReceived: orders.reduce(
+  //     (sum, o) => sum + (o.bank?.transferAmount || 0),
+  //     0
+  //   ),
+
+  //   totalDebt: orders.reduce(
+  //     (sum, o) => sum + (o.debtAmount || 0),
+  //     0
+  //   ),
+  // };
+
+  // const moneyMetrics = {
+  //   totalOrderAmount: orders.reduce((s, o) => s + (o.amount || 0), 0),
+
+  //   totalSePayReceived: orders.reduce(
+  //     (s, o) => s + (o.bank?.transferAmount || 0),
+  //     0
+  //   ),
+
+  //   totalCashReceived: orders.reduce(
+  //     (s, o) => s + (o.cashReceivedManual || 0),
+  //     0
+  //   ),
+
+  //   totalDebt: orders.reduce(
+  //     (s, o) => s + (o.debtAmount || 0),
+  //     0
+  //   ),
+  // };
+
+  const totalOrderAmount = orders.reduce(
+    (s, o) => s + (o.amount || 0),
+    0
+  );
+
+  const totalSePayReceived = orders.reduce(
+    (s, o) => s + (o.bank?.transferAmount || 0),
+    0
+  );
+
+  const totalDebt = orders.reduce(
+    (s, o) => s + (o.debtAmount || 0),
+    0
+  );
+
+  const totalCashReceived =
+    totalOrderAmount - totalSePayReceived - totalDebt;
+
+  const moneyMetrics = {
+    totalOrderAmount,
+    totalSePayReceived,
+    totalDebt,
+    totalCashReceived,
+  };
+
+  // const moneyMetrics = {
+  //   totalOrderAmount: orders.reduce((s, o) => s + (o.amount || 0), 0),
+
+  //   totalSePayReceived: orders.reduce(
+  //     (s, o) => s + (o.bank?.transferAmount || 0),
+  //     0
+  //   ),
+
+  //   totalCashReceived: orders.reduce(
+  //     (s, o) => s + (o.cashReceivedManual || 0),
+  //     0
+  //   ),
+
+  //   totalDebt: moneyMetrics.totalOrderAmount - (moneyMetrics.totalSePayReceived + moneyMetrics.totalCashReceived),
+  // };
+  // const totalDebt = moneyMetrics.totalOrderAmount - (moneyMetrics.totalSePayReceived + moneyMetrics.totalCashReceived);
+
+  // const totalOrderAmount = orders.reduce((s, o) => s + (o.amount || 0), 0);
+  // const totalSePayReceived = orders.reduce(
+  //   (s, o) => s + (o.bank?.transferAmount || 0),
+  //   0
+  // );
+  // const totalCashReceived = orders.reduce(
+  //   (s, o) => s + (o.cashReceivedManual || 0),
+  //   0
+  // );
+  // const totalDebt = totalOrderAmount - (totalSePayReceived + totalCashReceived);
+  // const moneyMetrics = {
+  //   totalOrderAmount,
+  //   totalSePayReceived,
+  //   totalCashReceived,
+  //   totalDebt,
+  // };
 
   //render order
   // const filteredOrders = orders.filter((order) => {
@@ -137,7 +230,7 @@ export default function OrdersPage() {
     all: "Tất cả",
     pending: "Chưa trả tiền",
     paid: "Đã thu tiền",
-    failed: "Thất bại",
+    failed: "Thanh toán thất bại",
     refunded: "Đã hoàn tiền",
   };
 
@@ -159,6 +252,64 @@ export default function OrdersPage() {
             <span className="text-xl bg-slate-50 p-2 rounded-lg">{item.icon}</span>
           </div>
         ))}
+      </div>
+
+      {/* KHỐI THỐNG KÊ TIỀN */}
+      {/* <div className="grid grid-cols-1 lg:grid-cols-3 gap-4">
+
+        <div className="bg-white p-4 rounded-xl border shadow-sm">
+          <p className="text-xs text-slate-400 uppercase">Tổng tiền đơn (Order)</p>
+          <h4 className="text-lg font-bold text-blue-600 mt-1">
+            {moneyMetrics.totalOrderAmount.toLocaleString("vi-VN")} đ
+          </h4>
+        </div>
+
+        <div className="bg-white p-4 rounded-xl border shadow-sm">
+          <p className="text-xs text-slate-400 uppercase">Tổng tiền nhận (SePay)</p>
+          <h4 className="text-lg font-bold text-emerald-600 mt-1">
+            {moneyMetrics.totalSePayReceived.toLocaleString("vi-VN")} đ
+          </h4>
+        </div>
+
+        <div className="bg-white p-4 rounded-xl border shadow-sm">
+          <p className="text-xs text-slate-400 uppercase">Tổng còn thiếu</p>
+          <h4 className="text-lg font-bold text-orange-600 mt-1">
+            {moneyMetrics.totalDebt.toLocaleString("vi-VN")} đ
+          </h4>
+        </div>
+
+      </div> */}
+
+      <div className="grid grid-cols-1 lg:grid-cols-4 gap-4">
+
+        <div className="bg-white p-4 rounded-xl border shadow-sm">
+          <p className="text-xs text-slate-400 uppercase">Tổng số tiền đơn (Order)</p>
+          <h4 className="text-lg font-bold text-blue-600">
+            {moneyMetrics.totalOrderAmount.toLocaleString("vi-VN")} đ
+          </h4>
+        </div>
+
+        <div className="bg-white p-4 rounded-xl border shadow-sm">
+          <p className="text-xs text-slate-400 uppercase">Tổng Nhận Chuyển khoản (Sepay)</p>
+          <h4 className="text-lg font-bold text-emerald-600">
+            {moneyMetrics.totalSePayReceived.toLocaleString("vi-VN")} đ
+          </h4>
+        </div>
+
+        <div className="bg-white p-4 rounded-xl border shadow-sm">
+          <p className="text-xs text-slate-400 uppercase">Tổng Nhận Tiền mặt </p>
+          <h4 className="text-lg font-bold text-purple-600">
+            {moneyMetrics.totalCashReceived.toLocaleString("vi-VN")} đ
+          </h4>
+        </div>
+
+        <div className="bg-white p-4 rounded-xl border shadow-sm">
+          <p className="text-xs text-slate-400 uppercase">Tổng đang nợ</p>
+          <h4 className="text-lg font-bold text-orange-600">
+            {moneyMetrics.totalDebt.toLocaleString("vi-VN")} đ
+          </h4>
+        </div>
+
       </div>
 
       {/* DANH SÁCH ĐƠN HÀNG CHÍNH */}
@@ -234,7 +385,7 @@ export default function OrdersPage() {
                   <th className="py-3 px-4">Thời gian</th>
                   <th className="py-3 px-4">Mã Đơn Hàng (ID)</th>
                   <th className="py-3 px-4">Khách Hàng</th>
-                  <th className="py-3 px-4 text-right">Tổng Tiền Đơn</th>
+                  <th className="py-3 px-4 text-right">Số Tiền Đơn (Order)</th>
                   <th className="py-3 px-4 text-center">Vận Chuyển</th>
                   <th className="py-3 px-4 text-center">Thanh Toán</th>
                   <th className="py-3 px-4 text-right">Thao Tác</th>
@@ -251,8 +402,12 @@ export default function OrdersPage() {
                     </td>
 
                     {/* Cột 1: Mã Đơn */}
-                    <td className="py-4 px-4 font-mono text-xs text-slate-800 font-semibold select-all">
+                    <td className="py-4 px-4 font-mono text-xs text-slate-800 font-semibold">
                       {order.id}
+                      <div className="text-[10px] text-slate-400 mt-1">
+                        <div> Mã đơn: {order.id}</div>
+                        <div>Mã GD SePay: {order.bank?.transactionId ? order.bank?.transactionId : 'null'}</div>
+                      </div>
                     </td>
 
                     {/* Cột 2: Thông tin Khách hàng */}
@@ -275,13 +430,15 @@ export default function OrdersPage() {
                     </td>
 
                     {/* Cột 5: Trạng thái Thanh toán */}
-                    <td className="py-4 px-4 text-center">
+                    <td className="py-4 px-4">
                       {getPaymentBadge(order.paymentStatus)}
                       {order.paymentStatus === "pending" && (
                         <div className="text-xs text-orange-600 font-semibold mt-1">
-                          Còn thiếu: {order.debtAmount?.toLocaleString("vi-VN")} đ
+                          Đang nợ: {order.debtAmount?.toLocaleString("vi-VN")} đ
                         </div>
                       )}
+                      <div className="text-slate-400 font-mono text-[10px] mt-1 font-bold">Mã đơn: {order.id}</div>
+                      <div className="text-slate-400 font-mono text-[10px] mt-0 font-bold">Mã GD SePay: {order.bank?.transactionId ? order.bank?.transactionId : 'null'}</div>
                     </td>
 
                     {/* Cột 6: Nút tương tác nhanh */}
@@ -437,7 +594,7 @@ export default function OrdersPage() {
                   <div className="flex flex-wrap gap-2">
                     {(
                       [
-                        { value: "pending", label: "⏳ Chưa trả tiền / Nhập số tiền còn thiếu" },
+                        { value: "pending", label: "⏳ Chưa trả tiền / Nhập số tiền đang nợ" },
                         { value: "paid", label: "💰 Đã thu tiền" },
                         { value: "refunded", label: "🔄 Đã hoàn tiền" },
                         { value: "failed", label: "❌ Thanh toán thất bại" },
@@ -450,6 +607,29 @@ export default function OrdersPage() {
                           if (item.value === "pending") {
                             setShowDebtInput(true);
                             setDebtInput(selectedOrder.debtAmount || 0);
+
+                            const debt = selectedOrder.debtAmount || 0;
+                            const updateData: any = {
+                              paymentStatus: item.value,
+                              cashReceivedManual: 0,
+                              debtAmount: debt,
+                            };
+                            if (debt > 0) {
+                              updateData.historyDebtAmount = debt;
+                            }
+                            handleUpdateStatus(selectedOrder.id, updateData);
+
+                            return;
+                          }
+
+                          if (item.value === "paid") {
+                            handleUpdateStatus(selectedOrder.id, {
+                              paymentStatus: item.value,
+                              cashReceivedManual: (selectedOrder.debtAmount || 0),
+                              debtAmount: 0,
+                              // (selectedOrder.cashReceivedManual || 0) +
+                              // (selectedOrder.debtAmount || 0),
+                            });
                             return;
                           }
 
@@ -466,9 +646,17 @@ export default function OrdersPage() {
                         {item.label}
                         {item.value === "pending" && selectedOrder.debtAmount > 0 && (
                           <div className="text-xs text-white-600 font-semibold mt-1">
-                            ⚠️ Khách còn thiếu: {selectedOrder.debtAmount.toLocaleString("vi-VN")} đ
+                            ⚠️ Đang nợ: {selectedOrder.debtAmount?.toLocaleString("vi-VN")} đ
                           </div>
                         )}
+
+                        {/* lịch sử nợ */}
+                        {item.value === "pending" && selectedOrder.historyDebtAmount && (
+                          <div className="text-xs text-white-600 font-semibold mt-1">
+                            ⚠️ Nợ cũ: {selectedOrder.historyDebtAmount?.toLocaleString("vi-VN")} đ
+                          </div>
+                        )}
+
                       </button>
                     ))}
                   </div>
@@ -477,7 +665,7 @@ export default function OrdersPage() {
                   {showDebtInput && (
                     <div className="mt-3 p-3 border border-orange-200 bg-orange-50 rounded-lg space-y-2">
                       <p className="text-xs font-semibold text-orange-700">
-                        Nhập số tiền còn thiếu
+                        Nhập số tiền đang nợ
                       </p>
 
                       {/* <input
@@ -540,11 +728,33 @@ export default function OrdersPage() {
 
                         <button
                           onClick={() => {
-                            handleUpdateStatus(selectedOrder.id, {
+
+
+
+                            // setShowDebtInput(true);
+                            // setDebtInput(selectedOrder.debtAmount || 0);
+
+                            const debt = selectedOrder.debtAmount || 0;
+                            const updateData: any = {
+                              // paymentStatus: item.value,
+                              // cashReceivedManual: 0,
+                              // debtAmount: debt,
                               paymentStatus: "pending",
                               debtAmount: debtInput,
-                            });
+                            };
+                            if (debt > 0) {
+                              updateData.historyDebtAmount = debt;
+                            }
+                            handleUpdateStatus(selectedOrder.id, updateData);
 
+                            // return;
+
+
+                            // ----
+                            // handleUpdateStatus(selectedOrder.id, {
+                            //   paymentStatus: "pending",
+                            //   debtAmount: debtInput,
+                            // });
                             setShowDebtInput(false);
                           }}
                           className="px-3 py-1 text-xs bg-orange-600 text-white rounded-md"
