@@ -27,8 +27,8 @@ export default function Sidebar() {
               key={item.name}
               href={item.href}
               className={`flex items-center gap-3 px-4 py-3 rounded-lg transition-all duration-200 ${isActive
-                  ? "bg-blue-600 text-white shadow-lg font-medium"
-                  : "text-slate-400 hover:bg-slate-800 hover:text-slate-200"
+                ? "bg-blue-600 text-white shadow-lg font-medium"
+                : "text-slate-400 hover:bg-slate-800 hover:text-slate-200"
                 }`}
             >
               <span className="text-xl">{item.icon}</span>
@@ -39,9 +39,11 @@ export default function Sidebar() {
       </nav>
 
       <div className="p-4 border-t border-slate-800">
-        <button className="w-full py-2 px-4 bg-slate-800 hover:bg-red-600 rounded-lg text-xs font-medium transition-colors text-slate-400 hover:text-white">
-          Đăng xuất Admin
-        </button>
+        <Link href='/'>
+          <button className="w-full py-2 px-4 bg-slate-800 hover:bg-red-600 rounded-lg text-xs font-medium transition-colors text-slate-400 hover:text-white">
+            Đăng xuất Admin
+          </button>
+        </Link>
       </div>
     </aside>
   );
