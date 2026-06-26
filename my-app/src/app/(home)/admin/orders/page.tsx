@@ -606,19 +606,6 @@ export default function OrdersPage() {
                         onClick={() => {
                           if (item.value === "pending") {
                             setShowDebtInput(true);
-                            setDebtInput(selectedOrder.debtAmount || 0);
-
-                            const debt = selectedOrder.debtAmount || 0;
-                            const updateData: any = {
-                              paymentStatus: item.value,
-                              cashReceivedManual: 0,
-                              debtAmount: debt,
-                            };
-                            if (debt > 0) {
-                              updateData.historyDebtAmount = debt;
-                            }
-                            handleUpdateStatus(selectedOrder.id, updateData);
-
                             return;
                           }
 
@@ -627,8 +614,7 @@ export default function OrdersPage() {
                               paymentStatus: item.value,
                               cashReceivedManual: (selectedOrder.debtAmount || 0),
                               debtAmount: 0,
-                              // (selectedOrder.cashReceivedManual || 0) +
-                              // (selectedOrder.debtAmount || 0),
+                              historyDebtAmount: (selectedOrder.debtAmount || 0),
                             });
                             return;
                           }
@@ -644,16 +630,38 @@ export default function OrdersPage() {
                           }`}
                       >
                         {item.label}
-                        {item.value === "pending" && selectedOrder.debtAmount > 0 && (
-                          <div className="text-xs text-white-600 font-semibold mt-1">
-                            ⚠️ Đang nợ: {selectedOrder.debtAmount?.toLocaleString("vi-VN")} đ
-                          </div>
-                        )}
 
-                        {/* lịch sử nợ */}
-                        {item.value === "pending" && selectedOrder.historyDebtAmount && (
-                          <div className="text-xs text-white-600 font-semibold mt-1">
-                            ⚠️ Nợ cũ: {selectedOrder.historyDebtAmount?.toLocaleString("vi-VN")} đ
+                        {/* <div className="text-left">
+                          {item.value === "pending" && selectedOrder.historyDebtAmount && (
+                            <div className="text-xs text-white-600 font-semibold mt-1">
+                              ⚠️ Nợ cũ: {selectedOrder.historyDebtAmount?.toLocaleString("vi-VN")} đ
+                            </div>
+                          )}
+
+                          {item.value === "pending" && selectedOrder.historyDebtAmount && (
+                            <div className="text-xs text-white-600 font-semibold mt-1">
+                              ⚠️ Đã thanh toán: {selectedOrder.cashReceivedManual?.toLocaleString("vi-VN")} đ
+                            </div>
+                          )}
+
+                          {item.value === "pending" && selectedOrder.debtAmount > 0 && (
+                            <div className="text-xs text-white-600 font-semibold mt-1">
+                              ⚠️ Nợ mới: {selectedOrder.debtAmount?.toLocaleString("vi-VN")} đ
+                            </div>
+                          )}
+                        </div> */}
+
+                        {item.value === "pending" && (
+                          <div className="text-left">
+                            <div className="text-xs text-white-600 font-semibold mt-1">
+                              ⚠️ Nợ cũ: {selectedOrder.historyDebtAmount?.toLocaleString("vi-VN")} đ
+                            </div>
+                            <div className="text-xs text-white-600 font-semibold mt-1">
+                              ⚠️ Đã nhận: {selectedOrder.cashReceivedManual?.toLocaleString("vi-VN")} đ
+                            </div>
+                            <div className="text-xs text-white-600 font-semibold mt-1">
+                              ⚠️ Nợ mới: {selectedOrder.debtAmount?.toLocaleString("vi-VN")} đ
+                            </div>
                           </div>
                         )}
 
@@ -665,7 +673,7 @@ export default function OrdersPage() {
                   {showDebtInput && (
                     <div className="mt-3 p-3 border border-orange-200 bg-orange-50 rounded-lg space-y-2">
                       <p className="text-xs font-semibold text-orange-700">
-                        Nhập số tiền đang nợ
+                        Nhập nợ mới
                       </p>
 
                       {/* <input
@@ -729,33 +737,51 @@ export default function OrdersPage() {
                         <button
                           onClick={() => {
 
-
-
-                            // setShowDebtInput(true);
-                            // setDebtInput(selectedOrder.debtAmount || 0);
-
-                            const debt = selectedOrder.debtAmount || 0;
-                            const updateData: any = {
-                              // paymentStatus: item.value,
-                              // cashReceivedManual: 0,
-                              // debtAmount: debt,
-                              paymentStatus: "pending",
-                              debtAmount: debtInput,
-                            };
-                            if (debt > 0) {
-                              updateData.historyDebtAmount = debt;
-                            }
-                            handleUpdateStatus(selectedOrder.id, updateData);
-
-                            // return;
-
-
-                            // ----
-                            // handleUpdateStatus(selectedOrder.id, {
+                            // const debt = selectedOrder.debtAmount || 0;
+                            // const updateData: any = {
                             //   paymentStatus: "pending",
                             //   debtAmount: debtInput,
-                            // });
+                            // };
+                            // if (debt > 0) {
+                            //   updateData.historyDebtAmount = debt;
+                            // }
+                            // handleUpdateStatus(selectedOrder.id, updateData);
+                            // setShowDebtInput(false);
+
+
+
+
+                            // const oldDebt = selectedOrder.historyDebtAmount || 0; // nợ gốc
+                            // const newDebt = debtInput || 0; // nợ mới
+
+                            // const cashReceived = oldDebt - newDebt;
+
+                            // const updateData: any = {
+                            //   paymentStatus: "pending",
+                            //   debtAmount: newDebt,
+                            //   cashReceivedManual: cashReceived > 0 ? cashReceived : 0,
+                            // };
+
+                            // button save
+                            const oldDebt = selectedOrder.debtAmount || 0; // nợ cũ (trước khi update)
+                            const newDebt = debtInput || 0; // nợ mới
+                            const cashReceived = oldDebt - newDebt;
+
+                            const updateData: any = {
+                              paymentStatus: newDebt === 0 ? "paid" : "pending",
+                              // nợ mới
+                              debtAmount: newDebt,
+                              // cash thu theo công thức của bạn
+                              cashReceivedManual: cashReceived > 0 ? cashReceived : 0,
+                              // 🔥 QUAN TRỌNG: lưu lại nợ cũ làm history snapshot
+                              historyDebtAmount: oldDebt,
+                            };
+
+                            handleUpdateStatus(selectedOrder.id, updateData);
                             setShowDebtInput(false);
+
+
+
                           }}
                           className="px-3 py-1 text-xs bg-orange-600 text-white rounded-md"
                         >
