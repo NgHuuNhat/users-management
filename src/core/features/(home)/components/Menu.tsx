@@ -9,7 +9,7 @@ export default function Menu() {
   const menus = [
     { href: "/", label: "Store" },
     { href: "/history", label: "History" },
-    { href: "/checkout/create", label: "Checkout QR" },
+    // { href: "/checkout/create", label: "Checkout QR" },
     { href: "/login", label: "Login" },
     { href: "/register", label: "Register" },
     { href: "/admin/orders", label: "Admin Page" },

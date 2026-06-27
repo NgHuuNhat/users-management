@@ -2,7 +2,7 @@
 
 import { useState, useEffect } from "react";
 import { collection, addDoc, onSnapshot, query } from "firebase/firestore";
-import { Product } from "@/core/services/types/data-base";
+import { Product } from "@/core/services/data-base";
 import { db } from "@/core/services/firebase";
 import { NumericFormat } from "react-number-format";
 // import { db } from "@/lib/firebase"; 

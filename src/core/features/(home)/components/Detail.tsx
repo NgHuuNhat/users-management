@@ -1,6 +1,6 @@
 "use client";
 
-import { Product } from "@/core/services/types/data-base";
+import { Product } from "@/core/services/data-base";
 
 interface Props {
   product: Product | null;

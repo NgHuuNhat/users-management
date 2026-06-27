@@ -2,7 +2,7 @@
 
 import { useState, useEffect } from "react";
 import { collection, onSnapshot, query, doc, updateDoc, orderBy } from "firebase/firestore";
-import { Order } from "@/core/services/types/data-base";
+import { Order } from "@/core/services/data-base";
 import { db } from "@/core/services/firebase";
 import { formatDate } from "@/core/features/lib/format-date";
 import { formatMoney, parseMoney } from "@/core/features/lib/format-money";

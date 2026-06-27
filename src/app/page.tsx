@@ -7,10 +7,13 @@ import { db } from "@/core/services/firebase";
 import {
   Product,
   OrderItem,
-} from "@/core/services/types/data-base";
-import Cart from "./(home)/_components/Cart";
-import Detail from "./(home)/_components/Detail";
-import Home from "./(home)/_components/Home";
+} from "@/core/services/data-base";
+import Home from "@/core/features/(home)/components/Home";
+import Detail from "@/core/features/(home)/components/Detail";
+import Cart from "@/core/features/(home)/components/Cart";
+// import Cart from "./(home)/_components/Cart";
+// import Detail from "./(home)/_components/Detail";
+// import Home from "./(home)/_components/Home";
 
 // import Home from "@/components/Home";
 // import Detail from "@/components/Detail";
@@ -59,9 +62,9 @@ export default function Page() {
         return prev.map((x) =>
           x.productId === product.id
             ? {
-                ...x,
-                quantity: x.quantity + 1,
-              }
+              ...x,
+              quantity: x.quantity + 1,
+            }
             : x
         );
       }
@@ -88,9 +91,9 @@ export default function Page() {
       prev.map((x) =>
         x.productId === productId
           ? {
-              ...x,
-              quantity: x.quantity + 1,
-            }
+            ...x,
+            quantity: x.quantity + 1,
+          }
           : x
       )
     );
@@ -104,9 +107,9 @@ export default function Page() {
         .map((x) =>
           x.productId === productId
             ? {
-                ...x,
-                quantity: x.quantity - 1,
-              }
+              ...x,
+              quantity: x.quantity - 1,
+            }
             : x
         )
         .filter((x) => x.quantity > 0)

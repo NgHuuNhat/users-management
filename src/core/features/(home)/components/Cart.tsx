@@ -1,7 +1,7 @@
 "use client";
 
 import { db } from "@/core/services/firebase";
-import { OrderItem } from "@/core/services/types/data-base";
+import { OrderItem } from "@/core/services/data-base";
 import { getPusherClient } from "@/core/features/checkout/pusher-client";
 import { doc, onSnapshot } from "firebase/firestore";
 import { useEffect, useState } from "react";

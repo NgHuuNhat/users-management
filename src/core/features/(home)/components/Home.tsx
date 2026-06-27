@@ -3,7 +3,7 @@
 import {
     Product,
     OrderItem,
-} from "@/core/services/types/data-base";
+} from "@/core/services/data-base";
 import Menu from "./Menu";
 
 interface Props {
