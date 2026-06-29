@@ -68,19 +68,32 @@ export default function OrderHistoryItem({ order }: Props) {
                         {order.items.map((item, index) => (
                             <div
                                 key={index}
-                                className="flex items-center justify-between rounded-2xl bg-white px-4 py-4"
+                                className="flex items-center justify-between gap-3 rounded-xl bg-white px-3 py-2"
                             >
-                                <div className="min-w-0 flex-1">
-                                    <p className="truncate text-sm font-medium">
-                                        {item.name}
-                                    </p>
+                                {/* LEFT */}
+                                <div className="flex min-w-0 flex-1 items-center gap-3">
 
-                                    <p className="text-xs text-zinc-500">
-                                        × {item.quantity}
-                                    </p>
+                                    {/* IMAGE */}
+                                    <img
+                                        src={item.image}
+                                        alt={item.name}
+                                        className="h-10 w-10 rounded-lg object-cover bg-zinc-100"
+                                    />
+
+                                    {/* INFO */}
+                                    <div className="min-w-0">
+                                        <p className="truncate text-sm font-medium text-zinc-900">
+                                            {item.name}
+                                        </p>
+
+                                        <p className="text-xs text-zinc-400">
+                                            {item.price} ×{item.quantity}
+                                        </p>
+                                    </div>
                                 </div>
 
-                                <p className="ml-4 shrink-0 text-sm font-semibold">
+                                {/* RIGHT - PRICE */}
+                                <p className="shrink-0 text-sm font-semibold text-zinc-900 whitespace-nowrap">
                                     {(item.price! * item.quantity).toLocaleString()}₫
                                 </p>
                             </div>
