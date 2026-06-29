@@ -1,159 +1,292 @@
 "use client";
 
 import { useState } from "react";
+import { toast } from "sonner";
+import {
+  collection,
+  getDocs,
+  query,
+  where,
+} from "firebase/firestore";
+import { db } from "@/core/services/firebase";
+import { Order } from "@/core/services/data-base";
+
+const post = (url: string, body: any) =>
+  fetch(url, {
+    method: "POST",
+    headers: { "Content-Type": "application/json" },
+    body: JSON.stringify(body),
+  }).then(r => r.json());
+
+type Customer = {
+  email: string;
+  otp: string;
+};
 
 export default function HistoryPage() {
-  const [email, setEmail] = useState("");
-  const [otp, setOtp] = useState("");
-  const [step, setStep] = useState<1 | 2 | 3>(1);
-  const [loading, setLoading] = useState(false);
-  const [orders, setOrders] = useState<any[]>([]);
+  const [customer, setCustomer] = useState<Customer>({
+    email: "",
+    otp: "",
+  });
 
-  const handleSendOtp = async () => {
-    if (!email) return alert("Nhập email");
+  const [loading, setLoading] = useState({
+    otp: false,
+    verify: false,
+    fetch: false,
+  });
 
-    setLoading(true);
+  const [verified, setVerified] = useState(false);
+  const [orders, setOrders] = useState<Order[]>([]);
+
+  const set = (k: keyof Customer, v: string) =>
+    setCustomer(p => ({ ...p, [k]: v }));
+
+  const validateEmail = () => {
+    if (!customer.email.trim()) {
+      toast.error("Vui lòng nhập email");
+      return false;
+    }
+    return true;
+  };
+
+  const validateOtp = () => {
+    if (!customer.otp.trim()) {
+      toast.error("Vui lòng nhập OTP");
+      return false;
+    }
+    return true;
+  };
+
+  // ================= OTP =================
+  const sendOtp = async () => {
+    if (!validateEmail()) return;
+    if (loading.otp) return;
+
+    setLoading(p => ({ ...p, otp: true }));
+
     try {
-      const res = await fetch("/api/history", {
-        method: "POST",
-        headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({
-          type: "send",
-          email,
-        }),
+      await post("/api/history", {
+        type: "send",
+        email: customer.email,
       });
 
-      if (!res.ok) throw new Error("Send OTP failed");
-
-      setStep(2);
-    } catch (err) {
-      alert("Gửi OTP thất bại");
+      toast.success("OTP đã gửi");
+    } catch {
+      toast.error("Gửi OTP thất bại");
     } finally {
-      setLoading(false);
+      setLoading(p => ({ ...p, otp: false }));
     }
   };
 
-  const handleVerifyOtp = async () => {
-    if (!otp) return alert("Nhập OTP");
+  // ================= SEARCH =================
+  const searchOrders = async () => {
+    if (!validateEmail()) return;
+    if (!validateOtp()) return;
 
-    setLoading(true);
+    setLoading(p => ({ ...p, verify: true }));
+
     try {
-      const res = await fetch("/api/history", {
-        method: "POST",
-        headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({
-          type: "verify",
-          email,
-          otp,
-        }),
+      const res = await post("/api/history", {
+        type: "verify",
+        email: customer.email,
+        otp: customer.otp,
       });
 
-      const data = await res.json();
-
-      if (!data.success) {
-        alert("OTP sai hoặc hết hạn");
+      if (!res.success) {
+        toast.error("OTP sai hoặc hết hạn");
         return;
       }
 
-      // giả lập fetch order sau verify
-      const mockDatabase = [
-        { id: "ORD001", email, product: "MacBook Air M2", status: "Đã giao" },
-        { id: "ORD002", email, product: "Chuột Magic Mouse", status: "Đang giao" },
-      ];
+      const q = query(
+        collection(db, "orders"),
+        where("customer.email", "==", customer.email)
+      );
 
-      setOrders(mockDatabase.filter((o) => o.email === email));
-      setStep(3);
-    } catch (err) {
-      alert("Verify thất bại");
+      const snap = await getDocs(q);
+
+      const data: Order[] = snap.docs.map(d => ({
+        id: d.id,
+        ...(d.data() as any),
+      }));
+
+      setOrders(data);
+      setVerified(true);
+
+      toast.success(`Tìm thấy ${data.length} đơn`);
+    } catch {
+      toast.error("Có lỗi xảy ra");
     } finally {
-      setLoading(false);
+      setLoading(p => ({ ...p, verify: false }));
     }
   };
 
   return (
-    <div className="min-h-screen flex items-center justify-center bg-zinc-50 p-4">
-      <div className="w-full max-w-md bg-white rounded-2xl shadow p-6">
+    <div className="min-h-screen bg-gradient-to-b from-zinc-50 to-white flex justify-center px-4 py-10">
+      <div className="w-full max-w-2xl space-y-6">
 
-        <h1 className="text-xl font-semibold text-center mb-6">
-          Tra cứu đơn hàng
-        </h1>
+        {/* HEADER */}
+        <div className="bg-white/80 backdrop-blur-xl border border-zinc-200 shadow-sm rounded-3xl p-6 space-y-4">
 
-        {/* STEP 1 */}
-        {step === 1 && (
-          <div className="space-y-4">
+          <h1 className="text-xl font-semibold">Tra cứu đơn hàng</h1>
+
+          {/* ROW 1 - EMAIL */}
+          <input
+            className="w-full px-4 py-3 rounded-2xl bg-zinc-50 border border-zinc-200 outline-none focus:ring-2 focus:ring-black/10"
+            placeholder="Nhập email"
+            value={customer.email}
+            onChange={e => set("email", e.target.value)}
+          />
+
+          {/* ROW 2 - OTP + BUTTON */}
+          <div className="flex gap-2">
             <input
-              className="w-full border rounded-lg p-3"
-              placeholder="Nhập email"
-              value={email}
-              onChange={(e) => setEmail(e.target.value)}
-            />
-
-            <button
-              onClick={handleSendOtp}
-              disabled={loading}
-              className="w-full bg-blue-600 text-white py-3 rounded-lg cursor-pointer"
-            >
-              {loading ? "Đang gửi..." : "Nhận mã OTP"}
-            </button>
-          </div>
-        )}
-
-        {/* STEP 2 */}
-        {step === 2 && (
-          <div className="space-y-4">
-            <p className="text-sm text-gray-500 text-center">
-              OTP đã gửi tới <b>{email}</b>
-            </p>
-
-            <input
-              className="w-full border rounded-lg p-3 text-center tracking-widest"
+              className="flex-1 px-4 py-3 rounded-2xl bg-zinc-50 border border-zinc-200 outline-none focus:ring-2 focus:ring-black/10 tracking-widest"
               placeholder="Nhập OTP"
-              value={otp}
-              onChange={(e) => setOtp(e.target.value)}
+              value={customer.otp}
+              onChange={e => set("otp", e.target.value)}
             />
 
             <button
-              onClick={handleVerifyOtp}
-              disabled={loading}
-              className="w-full bg-green-600 text-white py-3 rounded-lg cursor-pointer"
+              onClick={sendOtp}
+              className="px-5 rounded-2xl bg-black text-white text-sm cursor-pointer hover:scale-[1.02] active:scale-[0.98] transition"
             >
-              {loading ? "Đang xác minh..." : "Xác minh"}
+              {loading.otp ? "..." : "Lấy OTP"}
             </button>
+          </div>
+
+          {/* ROW 3 - SEARCH */}
+          <button
+            onClick={searchOrders}
+            className="w-full py-3 rounded-2xl bg-emerald-600 text-white font-medium cursor-pointer hover:scale-[1.02] active:scale-[0.98] transition"
+          >
+            {loading.verify ? "Đang tìm..." : "Tìm đơn hàng"}
+          </button>
+        </div>
+
+        {/* SUMMARY */}
+        {verified && (
+          <div className="bg-white/80 backdrop-blur-xl border border-zinc-200 shadow-sm rounded-3xl p-5 mb-4">
+            <div className="flex items-center justify-between">
+              <div>
+                <p className="text-sm text-zinc-500">
+                  Tổng số đơn hàng
+                </p>
+
+                <p className="mt-1 text-3xl font-semibold tracking-tight">
+                  {orders.length}
+                </p>
+              </div>
+
+              <div className="rounded-2xl bg-zinc-100 px-4 py-3">
+                <p className="text-xs uppercase tracking-wider text-zinc-500">
+                  Tổng chi tiêu
+                </p>
+
+                <p className="mt-1 text-lg font-semibold">
+                  {orders
+                    .reduce((sum, order) => sum + (order.amount ?? 0), 0)
+                    .toLocaleString()}
+                  ₫
+                </p>
+              </div>
+            </div>
           </div>
         )}
 
-        {/* STEP 3 */}
-        {step === 3 && (
-          <div className="space-y-4">
-            <h2 className="font-semibold">Đơn hàng của bạn <br /> email: {email}</h2>
+        {/* RESULT */}
+        <div className="space-y-3">
+          {!verified ? (
+            <div className="text-center text-sm text-zinc-400">
+              Nhập email + OTP để xem đơn hàng
+            </div>
+          ) : orders.length === 0 ? (
+            <div className="text-center text-sm text-zinc-400">
+              Không có đơn hàng
+            </div>
+          ) : (
+            orders.map(order => (
+              <div
+                key={order.id}
+                className="bg-white/80 backdrop-blur-xl border border-zinc-200 shadow-sm rounded-3xl p-5 space-y-4"
+              >
+                {/* HEADER */}
+                <div className="flex justify-between items-start">
+                  <div>
+                    <div className="font-semibold text-base">
+                      Đơn #{order.id.slice(-6)}
+                    </div>
+                    <div className="text-xs text-zinc-400">
+                      ID: {order.id}
+                    </div>
+                  </div>
 
-            {orders.length === 0 ? (
-              <p className="text-gray-500">Không có đơn hàng</p>
-            ) : (
-              orders.map((o) => (
-                <div key={o.id} className="border p-3 rounded-lg">
-                  <div className="font-medium">{o.product}</div>
-                  <div className="text-sm text-gray-500">
-                    Trạng thái: {o.status}
+                  <span className="text-xs px-3 py-1 rounded-full bg-zinc-100 text-zinc-600">
+                    {order.status}
+                  </span>
+                </div>
+
+                {/* TIME */}
+                <div className="text-sm text-zinc-500">
+                  📅 Thời gian đặt:{" "}
+                  {order.createdAt?.toDate?.()?.toLocaleString?.() || "N/A"}
+                </div>
+
+                {/* PRODUCTS */}
+                <div className="space-y-2">
+                  <div className="text-sm font-medium text-zinc-700">
+                    🛒 Sản phẩm
+                  </div>
+
+                  <div className="space-y-2">
+                    {order.items?.map((item: any, idx: number) => (
+                      <div
+                        key={idx}
+                        className="flex justify-between text-sm bg-zinc-50 rounded-xl px-3 py-2"
+                      >
+                        <div className="flex flex-col">
+                          <span className="font-medium">{item.name}</span>
+                          <span className="text-xs text-zinc-500">
+                            SL: {item.quantity}
+                          </span>
+                        </div>
+
+                        <div className="font-medium">
+                          {(item.price * item.quantity)?.toLocaleString()}₫
+                        </div>
+                      </div>
+                    ))}
                   </div>
                 </div>
-              ))
-            )}
 
-            <button
-              onClick={() => {
-                setStep(1);
-                setOtp("");
-                setEmail("");
-                setOrders([]);
-              }}
-              className="w-full bg-blue-600 text-white py-3 rounded-lg cursor-pointer"
-            >
-              Tra cứu lại
-            </button>
+                {/* TOTAL */}
+                <div className="flex justify-between items-center pt-2 border-t border-zinc-100">
+                  <span className="text-sm text-zinc-500">Tổng đơn</span>
+                  <span className="text-lg font-semibold">
+                    {order.amount?.toLocaleString()}₫
+                  </span>
+                </div>
 
-          </div>
-        )}
+                {/* CUSTOMER INFO */}
+                <div className="bg-zinc-50 rounded-2xl p-3 space-y-1 text-sm">
+                  <div className="font-medium text-zinc-700">
+                    📦 Thông tin nhận hàng
+                  </div>
+
+                  <div className="text-zinc-600">
+                    👤 {order.customer?.name}
+                  </div>
+                  <div className="text-zinc-600">
+                    📞 {order.customer?.phone}
+                  </div>
+                  <div className="text-zinc-600">
+                    📍 {order.customer?.address}
+                  </div>
+                </div>
+              </div>
+            ))
+          )}
+        </div>
+
       </div>
     </div>
   );
