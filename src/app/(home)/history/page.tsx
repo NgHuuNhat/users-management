@@ -233,8 +233,8 @@ export default function HistoryPage() {
             </div>
           ) : (
             <div className="space-y-4">
-              {orders.map(o => (
-                <OrderHistoryItem key={o.id} order={o} />
+              {orders.map((o, index: any) => (
+                <OrderHistoryItem key={o.id} order={o} index={index} />
               ))}
             </div>
           )}

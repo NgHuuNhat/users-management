@@ -1,141 +1,119 @@
 "use client";
 
+import { ORDER_STATUS, PAYMENT_STATUS } from "@/core/features/order/order-status";
 import { Order } from "@/core/services/data-base";
 
-type Props = {
-    order: Order;
+type PropsMiniTag = {
+    status: { label: string; color: string; icon: string };
 };
 
-export default function OrderHistoryItem({ order }: Props) {
-    const createdAt =
-        order.createdAt?.toDate?.()?.toLocaleString("vi-VN") ?? "N/A";
-
+function MiniTag({ status }: PropsMiniTag) {
     return (
-        <article className="overflow-hidden rounded-3xl border border-zinc-200 bg-white shadow-sm transition hover:shadow-md">
-
-            {/* HEADER */}
-            <header className="flex flex-col gap-3 border-b border-zinc-100 px-4 py-4 sm:flex-row sm:items-start sm:justify-between sm:px-6 sm:py-5">
-
-                <div className="min-w-0">
-                    <h2 className="truncate text-lg sm:text-xl font-semibold tracking-tight">
-                        Mã đơn: {order.id}
-                    </h2>
-
-                    <p className="mt-1 text-xs sm:text-sm text-zinc-400">
-                        Ngày đặt: {createdAt}
-                    </p>
-                </div>
-
-                <div className="flex flex-wrap gap-2 sm:justify-end">
-                    <span className="rounded-full bg-zinc-100 px-3 py-1 text-xs sm:text-sm font-medium text-zinc-700">
-                        {order.paymentStatus}
-                    </span>
-
-                    <span className="rounded-full bg-zinc-100 px-3 py-1 text-xs sm:text-sm font-medium text-zinc-700">
-                        {order.status}
-                    </span>
-                </div>
-            </header>
-
-            <div className="space-y-4 p-4 sm:space-y-5 sm:p-6">
-
-                {/* CUSTOMER */}
-                <section className="rounded-2xl bg-zinc-50 p-4 sm:rounded-3xl sm:p-5">
-
-                    <h3 className="mb-3 text-sm sm:text-base font-semibold">
-                        Thông tin người nhận
-                    </h3>
-
-                    <div className="grid grid-cols-1 gap-2 sm:grid-cols-2 sm:gap-3 text-sm">
-                        <Row label="Tên" value={order.customer.name} />
-                        <Row label="SĐT" value={order.customer.phone} />
-                        <Row label="Email" value={order.customer.email} />
-                        <Row label="Địa chỉ" value={order.customer.address} />
-                    </div>
-                </section>
-
-                {/* PRODUCTS */}
-                <section className="rounded-2xl bg-zinc-50 p-4 sm:rounded-3xl sm:p-5">
-
-                    <div className="mb-3 flex items-center justify-between">
-                        <h3 className="text-sm sm:text-base font-semibold">
-                            Sản phẩm
-                        </h3>
-
-                        <span className="rounded-full bg-white px-2 py-1 text-xs text-zinc-500">
-                            {order.items.length}
-                        </span>
-                    </div>
-
-                    <div className="space-y-2">
-                        {order.items.map((item, index) => (
-                            <div
-                                key={index}
-                                className="flex items-center justify-between gap-3 rounded-xl bg-white px-3 py-2"
-                            >
-                                {/* LEFT */}
-                                <div className="flex min-w-0 flex-1 items-center gap-3">
-
-                                    <img
-                                        src={item.image}
-                                        alt={item.name}
-                                        className="h-9 w-9 sm:h-10 sm:w-10 rounded-lg object-cover bg-zinc-100"
-                                    />
-
-                                    <div className="min-w-0">
-                                        <p className="truncate text-sm font-medium text-zinc-900">
-                                            {item.name}
-                                        </p>
-
-                                        <p className="text-xs text-zinc-400">
-                                            ×{item.quantity}
-                                        </p>
-                                    </div>
-                                </div>
-
-                                {/* PRICE */}
-                                <p className="shrink-0 text-sm font-semibold whitespace-nowrap">
-                                    {(item.price! * item.quantity).toLocaleString()}₫
-                                </p>
-                            </div>
-                        ))}
-                    </div>
-
-                    {/* TOTAL */}
-                    <div className="mt-4 flex items-center justify-between border-t border-zinc-200 pt-4 sm:mt-5 sm:pt-5">
-
-                        <span className="text-sm text-zinc-500">
-                            Tổng
-                        </span>
-
-                        <span className="text-xl sm:text-2xl font-semibold tracking-tight">
-                            {order.amount.toLocaleString()}₫
-                        </span>
-                    </div>
-                </section>
-
-            </div>
-        </article>
+        <span className={`inline-flex items-center gap-1 rounded-full bg-zinc-100 px-2 py-[2px] text-[11px] ${status.color}`}>
+            <span>{status.icon}</span>
+            <span>{status.label}</span>
+        </span>
     );
 }
 
-/* ROW */
-function Row({
-    label,
-    value,
-}: {
-    label: string;
-    value: React.ReactNode;
-}) {
-    return (
-        <div className="flex items-start justify-between gap-3 rounded-xl bg-white px-3 py-2">
-            <span className="text-xs sm:text-sm text-zinc-500">
-                {label}
-            </span>
+export default function OrderHistoryItem({ order, index }: { order: Order, index: any }) {
+    const createdAt = order.createdAt?.toDate?.()?.toLocaleString("vi-VN") ?? "N/A";
 
-            <span className="max-w-[60%] text-right text-xs sm:text-sm font-medium text-zinc-900 break-words">
-                {value}
-            </span>
-        </div>
+    return (
+        <article className="rounded-2xl border bg-white p-4 sm:p-5 space-y-4">
+
+            {/* HEADER */}
+            <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-2 border-b border-zinc-100 pb-3">
+                <div className="min-w-0">
+                    <p className="text-sm font-semibold truncate">STT: {index + 1}</p>
+                    <p className="text-sm font-semibold truncate">Mã đơn: {order.id}</p>
+                    <p className="text-[11px] text-zinc-400">Ngày tạo: {createdAt}</p>
+                </div>
+
+                <div className="flex items-center gap-2 flex-wrap sm:flex-nowrap">
+                    <MiniTag status={ORDER_STATUS[order.status]} />
+                </div>
+            </div>
+
+            {/* ITEMS */}
+            <div className="space-y-3">
+                {order.items.map((item, i) => (
+                    <div key={i} className="flex items-center justify-between gap-3">
+                        <div className="flex items-center gap-3 min-w-0">
+                            <img
+                                src={item.image}
+                                className="h-10 w-10 sm:h-9 sm:w-9 rounded-lg object-cover bg-zinc-100"
+                            />
+                            <div className="min-w-0">
+                                <p className="text-sm truncate">{item.name}</p>
+                                <p className="text-[11px] text-zinc-400">{item.price} ×{item.quantity}</p>
+                            </div>
+                        </div>
+
+                        <p className="text-sm font-medium whitespace-nowrap">
+                            {(item.price! * item.quantity).toLocaleString()}₫
+                        </p>
+                    </div>
+                ))}
+            </div>
+
+            {/* RECEIVER */}
+            {/* <div className="pt-3 border-t border-zinc-100 space-y-2 text-xs">
+                {[
+                    ["Họ tên", order.customer.name],
+                    ["SĐT", order.customer.phone],
+                    ["Email", order.customer.email],
+                    ["Địa chỉ", order.customer.address],
+                ].map(([label, value]) => (
+                    <div key={label} className="flex gap-3">
+                        <span className="text-zinc-400 shrink-0">{label}</span>
+                        <span className="text-zinc-900 text-right break-words max-w-[70%]">
+                            {value}
+                        </span>
+                    </div>
+                ))}
+            </div> */}
+            <div className="pt-3 border-t border-zinc-100 space-y-2 text-xs">
+                {[
+                    ["Họ tên", order.customer.name],
+                    ["SĐT", order.customer.phone],
+                    ["Email", order.customer.email],
+                    ["Địa chỉ", order.customer.address],
+                ].map(([label, value]) => (
+                    <div key={label} className="flex items-start gap-3">
+
+                        {/* LABEL: cố định width */}
+                        <span className="bg-zinc-100 rounded-full w-12 px-1 shrink-0 text-zinc-400">
+                            {label}
+                        </span>
+
+                        {/* VALUE: chiếm phần còn lại */}
+                        <span className="flex-1 text-zinc-900 break-words">
+                            {value}
+                        </span>
+
+                    </div>
+                ))}
+            </div>
+
+            {/* FOOTER */}
+            <div className="pt-3 border-t border-zinc-100 flex flex-col sm:flex-row sm:items-center sm:justify-between gap-3">
+
+                <div className="text-[11px] text-zinc-500 space-y-1">
+                    <div className="flex items-center gap-2">
+                        <MiniTag status={PAYMENT_STATUS[order.paymentStatus]} />
+                    </div>
+                </div>
+
+                <div className="text-left sm:text-right">
+                    <p className="text-[11px] text-zinc-400">Total</p>
+                    <p className="text-base font-semibold">
+                        {order.amount.toLocaleString()}₫
+                    </p>
+                </div>
+
+            </div>
+
+        </article>
     );
 }
