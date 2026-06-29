@@ -10,6 +10,7 @@ import {
 } from "firebase/firestore";
 import { db } from "@/core/services/firebase";
 import { Order } from "@/core/services/data-base";
+import OrderHistoryItem from "./OrderHistoryItem";
 
 const post = (url: string, body: any) =>
   fetch(url, {
@@ -121,171 +122,114 @@ export default function HistoryPage() {
   };
 
   return (
-    <div className="min-h-screen bg-gradient-to-b from-zinc-50 to-white flex justify-center px-4 py-10">
-      <div className="w-full max-w-2xl space-y-6">
+    <div className="min-h-screen bg-gradient-to-b from-zinc-50 to-white px-4 py-8">
+      <div className="mx-auto max-w-7xl grid gap-6 lg:grid-cols-[360px_1fr]">
 
-        {/* HEADER */}
-        <div className="bg-white/80 backdrop-blur-xl border border-zinc-200 shadow-sm rounded-3xl p-6 space-y-4">
+        {/* ================= LEFT SIDEBAR ================= */}
+        <aside className="lg:sticky lg:top-6 lg:self-start space-y-5">
 
-          <h1 className="text-xl font-semibold">Tra cứu đơn hàng</h1>
+          {/* Search */}
+          <div className="rounded-3xl border border-zinc-200 bg-white/80 backdrop-blur-xl shadow-sm p-6">
 
-          {/* ROW 1 - EMAIL */}
-          <input
-            className="w-full px-4 py-3 rounded-2xl bg-zinc-50 border border-zinc-200 outline-none focus:ring-2 focus:ring-black/10"
-            placeholder="Nhập email"
-            value={customer.email}
-            onChange={e => set("email", e.target.value)}
-          />
+            <h1 className="text-2xl font-semibold tracking-tight">
+              Tra cứu đơn hàng
+            </h1>
 
-          {/* ROW 2 - OTP + BUTTON */}
-          <div className="flex gap-2">
-            <input
-              className="flex-1 px-4 py-3 rounded-2xl bg-zinc-50 border border-zinc-200 outline-none focus:ring-2 focus:ring-black/10 tracking-widest"
-              placeholder="Nhập OTP"
-              value={customer.otp}
-              onChange={e => set("otp", e.target.value)}
-            />
+            <p className="mt-2 text-sm text-zinc-500">
+              Nhập email và mã OTP để xem lịch sử mua hàng.
+            </p>
 
-            <button
-              onClick={sendOtp}
-              className="px-5 rounded-2xl bg-black text-white text-sm cursor-pointer hover:scale-[1.02] active:scale-[0.98] transition"
-            >
-              {loading.otp ? "..." : "Lấy OTP"}
-            </button>
+            <div className="mt-6 space-y-3">
+
+              <input
+                value={customer.email}
+                onChange={e => set("email", e.target.value)}
+                placeholder="Email"
+                className="w-full rounded-2xl border border-zinc-200 bg-zinc-50 px-4 py-3 outline-none transition focus:border-black"
+              />
+
+              <div className="flex items-center gap-2">
+                <input
+                  className="min-w-0 flex-1 rounded-2xl border border-zinc-200 bg-zinc-50 px-4 py-3 outline-none transition focus:border-black"
+                  placeholder="OTP"
+                  value={customer.otp}
+                  onChange={e => set("otp", e.target.value)}
+                />
+
+                <button
+                  type="button"
+                  onClick={sendOtp}
+                  className="shrink-0 whitespace-nowrap rounded-2xl bg-black px-5 py-3 text-sm font-medium text-white cursor-pointer transition hover:opacity-90"
+                >
+                  {loading.otp ? "Đang gửi..." : "Lấy OTP"}
+                </button>
+              </div>
+
+              <button
+                onClick={searchOrders}
+                className="w-full rounded-2xl bg-emerald-600 py-3 font-medium text-white cursor-pointer transition hover:opacity-90"
+              >
+                {loading.verify ? "Đang tìm..." : "Tìm đơn hàng"}
+              </button>
+
+            </div>
           </div>
 
-          {/* ROW 3 - SEARCH */}
-          <button
-            onClick={searchOrders}
-            className="w-full py-3 rounded-2xl bg-emerald-600 text-white font-medium cursor-pointer hover:scale-[1.02] active:scale-[0.98] transition"
-          >
-            {loading.verify ? "Đang tìm..." : "Tìm đơn hàng"}
-          </button>
-        </div>
+          {/* Statistics */}
+          {verified && (
+            <div className="rounded-3xl border border-zinc-200 bg-white/80 backdrop-blur-xl shadow-sm p-6 space-y-5">
 
-        {/* SUMMARY */}
-        {verified && (
-          <div className="bg-white/80 backdrop-blur-xl border border-zinc-200 shadow-sm rounded-3xl p-5 mb-4">
-            <div className="flex items-center justify-between">
               <div>
                 <p className="text-sm text-zinc-500">
-                  Tổng số đơn hàng
+                  Tổng đơn hàng
                 </p>
 
-                <p className="mt-1 text-3xl font-semibold tracking-tight">
+                <p className="mt-1 text-4xl font-semibold">
                   {orders.length}
                 </p>
               </div>
 
-              <div className="rounded-2xl bg-zinc-100 px-4 py-3">
-                <p className="text-xs uppercase tracking-wider text-zinc-500">
+              <div className="border-t pt-5">
+                <p className="text-sm text-zinc-500">
                   Tổng chi tiêu
                 </p>
 
-                <p className="mt-1 text-lg font-semibold">
+                <p className="mt-1 text-2xl font-semibold">
                   {orders
-                    .reduce((sum, order) => sum + (order.amount ?? 0), 0)
+                    .reduce((sum, o) => sum + (o.amount ?? 0), 0)
                     .toLocaleString()}
                   ₫
                 </p>
               </div>
-            </div>
-          </div>
-        )}
 
-        {/* RESULT */}
-        <div className="space-y-3">
+            </div>
+          )}
+
+        </aside>
+
+        {/* ================= RIGHT CONTENT ================= */}
+        <section className="min-w-0">
+
           {!verified ? (
-            <div className="text-center text-sm text-zinc-400">
-              Nhập email + OTP để xem đơn hàng
+            <div className="flex h-80 items-center justify-center rounded-3xl border border-dashed border-zinc-300 bg-white text-zinc-400">
+              Nhập email và OTP để xem đơn hàng
             </div>
           ) : orders.length === 0 ? (
-            <div className="text-center text-sm text-zinc-400">
-              Không có đơn hàng
+            <div className="flex h-80 items-center justify-center rounded-3xl border border-dashed border-zinc-300 bg-white text-zinc-400">
+              Không tìm thấy đơn hàng
             </div>
           ) : (
-            orders.map(order => (
-              <div
-                key={order.id}
-                className="bg-white/80 backdrop-blur-xl border border-zinc-200 shadow-sm rounded-3xl p-5 space-y-4"
-              >
-                {/* HEADER */}
-                <div className="flex justify-between items-start">
-                  <div>
-                    <div className="font-semibold text-base">
-                      Đơn #{order.id.slice(-6)}
-                    </div>
-                    <div className="text-xs text-zinc-400">
-                      ID: {order.id}
-                    </div>
-                  </div>
-
-                  <span className="text-xs px-3 py-1 rounded-full bg-zinc-100 text-zinc-600">
-                    {order.status}
-                  </span>
-                </div>
-
-                {/* TIME */}
-                <div className="text-sm text-zinc-500">
-                  📅 Thời gian đặt:{" "}
-                  {order.createdAt?.toDate?.()?.toLocaleString?.() || "N/A"}
-                </div>
-
-                {/* PRODUCTS */}
-                <div className="space-y-2">
-                  <div className="text-sm font-medium text-zinc-700">
-                    🛒 Sản phẩm
-                  </div>
-
-                  <div className="space-y-2">
-                    {order.items?.map((item: any, idx: number) => (
-                      <div
-                        key={idx}
-                        className="flex justify-between text-sm bg-zinc-50 rounded-xl px-3 py-2"
-                      >
-                        <div className="flex flex-col">
-                          <span className="font-medium">{item.name}</span>
-                          <span className="text-xs text-zinc-500">
-                            SL: {item.quantity}
-                          </span>
-                        </div>
-
-                        <div className="font-medium">
-                          {(item.price * item.quantity)?.toLocaleString()}₫
-                        </div>
-                      </div>
-                    ))}
-                  </div>
-                </div>
-
-                {/* TOTAL */}
-                <div className="flex justify-between items-center pt-2 border-t border-zinc-100">
-                  <span className="text-sm text-zinc-500">Tổng đơn</span>
-                  <span className="text-lg font-semibold">
-                    {order.amount?.toLocaleString()}₫
-                  </span>
-                </div>
-
-                {/* CUSTOMER INFO */}
-                <div className="bg-zinc-50 rounded-2xl p-3 space-y-1 text-sm">
-                  <div className="font-medium text-zinc-700">
-                    📦 Thông tin nhận hàng
-                  </div>
-
-                  <div className="text-zinc-600">
-                    👤 {order.customer?.name}
-                  </div>
-                  <div className="text-zinc-600">
-                    📞 {order.customer?.phone}
-                  </div>
-                  <div className="text-zinc-600">
-                    📍 {order.customer?.address}
-                  </div>
-                </div>
-              </div>
-            ))
+            <div className="space-y-5">
+              {orders.map(order => (
+                <OrderHistoryItem
+                  key={order.id}
+                  order={order}
+                />
+              ))}
+            </div>
           )}
-        </div>
+
+        </section>
 
       </div>
     </div>
