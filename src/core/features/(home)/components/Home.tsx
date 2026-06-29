@@ -1,287 +1,86 @@
 "use client";
 
-import {
-    Product,
-    OrderItem,
-} from "@/core/services/data-base";
+import { OrderItem, Product } from "@/core/services/data-base";
 import Menu from "./Menu";
 
 interface Props {
     products: Product[];
     cart: OrderItem[];
-
     onOpenCart: () => void;
-    onDetail: (
-        product: Product
-    ) => void;
-
-    onAdd: (
-        product: Product
-    ) => void;
+    onDetail: (product: Product) => void;
+    onAdd: (product: Product) => void;
 }
 
-export default function Home({
-    products,
-    cart,
-    onOpenCart,
-    onDetail,
-    onAdd,
-}: Props) {
-    const cartCount = cart.reduce(
-        (s, x) => s + x.quantity,
-        0
-    );
+export default function Home({ products, cart, onOpenCart, onDetail, onAdd }: Props) {
+    const cartCount = cart.reduce((sum, item) => sum + item.quantity, 0);
 
     return (
         <main className="min-h-screen bg-[#f5f5f7]">
-            {/* Header */}
-            <header className="sticky top-0 z-50 bg-white/80 backdrop-blur-xl border-b border-zinc-200">
-                <div className="max-w-7xl mx-auto px-6 h-16 flex items-center justify-between">
-                    {/* Logo */}
-                    <h1 className="text-2xl font-semibold tracking-tight">
-                        Store
-                    </h1>
+            <header className="sticky top-0 z-50 border-b border-zinc-200/80 bg-white/80 backdrop-blur-xl">
+                <div className="mx-auto flex h-16 max-w-7xl items-center justify-between px-4 sm:px-6 lg:px-8">
+                    <h1 className="text-xl font-semibold tracking-tight sm:text-2xl">Store</h1>
 
-                    {/* Menu */}
                     <Menu />
-
-                    {/* Cart */}
-                    {/* <button
-                        onClick={onOpenCart}
-                        className="
-        relative
-        h-10 w-10
-        rounded-full
-        hover:bg-zinc-100
-        transition
-        flex items-center justify-center
-        text-xl
-      "
-                    >
-
-                        <span className="d-flex">
-                            <span>Giỏ hàng</span>
-                            <span>🛒</span>
-                        </span>
-
-                        {cartCount > 0 && (
-                            <span
-                                className="
-            absolute
-            -top-1
-            -right-1
-            min-w-5
-            h-5
-            px-1
-            rounded-full
-            bg-black
-            text-white
-            text-[11px]
-            flex items-center justify-center
-          "
-                            >
-                                {cartCount}
-                            </span>
-                        )}
-                    </button> */}
-
-
-                    {/* <button
-                        onClick={onOpenCart}
-                        className="
-    relative
-    flex items-center gap-2
-    px-4 py-2
-    rounded-full
-    hover:bg-zinc-200
-    transition
-    text-sm font-medium bg-black text-white cursor-pointer
-  "
-                    >
-                        <span>Giỏ hàng</span>
-                        <span className="text-lg">🛒</span>
-
-                        {cartCount > 0 && (
-                            <span
-                                className="
-        absolute
-        -top-1
-        -right-1
-        min-w-5
-        h-5
-        px-1
-        rounded-full
-        bg-black
-        text-white
-        text-[11px]
-        flex items-center justify-center
-      "
-                            >
-                                {cartCount}
-                            </span>
-                        )}
-                    </button> */}
-
-
-                    {/* <button
-                        onClick={onOpenCart}
-                        className="
-    relative
-    flex items-center gap-2
-    px-5 py-2.5
-    rounded-full
-    bg-black text-white
-    text-sm font-medium
-    shadow-sm
-    hover:bg-zinc-800
-    active:scale-[0.97]
-    transition-all duration-200
-    cursor-pointer
-  "
-                    >
-                        <span>Giỏ hàng</span>
-                        <span className="text-lg">🛒</span>
-
-                        {cartCount > 0 && (
-                            <span
-                                className="
-        absolute
-        -top-1.5
-        -right-1.5
-        min-w-5 h-5
-        px-1
-        rounded-full
-        bg-red-500
-        text-white
-        text-[11px]
-        flex items-center justify-center
-        shadow-md
-      "
-                            >
-                                {cartCount}
-                            </span>
-                        )}
-                    </button> */}
-
-                    {/* <button onClick={onOpenCart} className="cursor-pointer relative flex items-center gap-2 px-4 py-2 rounded-full bg-black text-white font-medium text-sm shadow-sm hover:bg-zinc-800 hover:shadow-md active:scale-95 transition-all duration-200">
-                        <span>Giỏ hàng</span>
-                        <span className="text-lg">🛒</span>
-
-                        {cartCount > 0 && (
-                            <span className="absolute -top-2 -right-2 min-w-5 h-5 px-1 rounded-full bg-red-500 text-white text-[11px] flex items-center justify-center shadow-md">
-                                {cartCount}
-                            </span>
-                        )}
-                    </button> */}
-
-                    {/* <button
-                        onClick={onOpenCart}
-                        className="cursor-pointer relative flex items-center gap-2 px-4 py-2 rounded-full bg-yellow-400 text-black font-semibold text-sm shadow-md hover:bg-yellow-300 hover:shadow-lg active:scale-95 transition-all duration-200"
-                    >
-                        <span>Giỏ hàng</span>
-                        <span className="text-lg">🛒</span>
-
-                        {cartCount > 0 && (
-                            <span className="absolute -top-2 -right-2 min-w-5 h-5 px-1 rounded-full bg-red-500 text-white text-[11px] flex items-center justify-center shadow-md">
-                                {cartCount}
-                            </span>
-                        )}
-                    </button> */}
-
-                    {/* <button
-                        onClick={onOpenCart}
-                        className="relative flex items-center gap-1 px-3 py-2 rounded-full bg-yellow-400 text-black text-sm font-medium shadow-sm hover:bg-yellow-300 active:scale-95 transition"
-                    >
-                        <span>🛒</span>
-                        <span>Giỏ hàng</span>
-
-                        {cartCount > 0 && (
-                            <span className="absolute -top-1 -right-1 min-w-4 h-4 px-1 rounded-full bg-red-500 text-white text-[10px] flex items-center justify-center">
-                                {cartCount}
-                            </span>
-                        )}
-                    </button> */}
 
                     <button
                         onClick={onOpenCart}
-                        className="relative flex items-center gap-1 px-3 py-2 rounded-full bg-white text-black text-sm font-medium shadow-sm border border-zinc-200 hover:bg-zinc-50 active:scale-95 transition"
+                        className="relative flex cursor-pointer items-center gap-2 rounded-full border border-zinc-200 bg-white px-3 py-2 text-xs font-medium shadow-sm transition-all duration-200 hover:-translate-y-0.5 hover:bg-zinc-50 hover:shadow-md active:scale-95 sm:px-4 sm:text-sm"
                     >
-                        <span>🛒</span>
+                        <span className="text-base">🛒</span>
                         <span>Giỏ hàng</span>
 
                         {cartCount > 0 && (
-                            <span className="absolute -top-1 -right-1 min-w-4 h-4 px-1 rounded-full bg-red-500 text-white text-[10px] flex items-center justify-center shadow">
+                            <span className="absolute -top-1 -right-1 flex h-5 min-w-5 items-center justify-center rounded-full bg-red-500 px-1 text-[10px] font-semibold text-white shadow">
                                 {cartCount}
                             </span>
                         )}
                     </button>
-
-
                 </div>
             </header>
 
-            {/* Hero */}
-            <section className="py-24 text-center px-6">
-                <h2 className="text-6xl font-semibold tracking-tight">
+            {/* <section className="px-4 py-16 text-center sm:px-6 sm:py-20 lg:px-8 lg:py-24">
+                <h2 className="text-4xl font-semibold tracking-tight sm:text-5xl lg:text-6xl">
                     Khám phá sản phẩm.
                 </h2>
 
-                <p className="mt-6 text-xl text-slate-500">
-                    Thiết kế tối giản.
-                    Trải nghiệm hiện đại.
+                <p className="mx-auto mt-5 max-w-2xl text-base leading-relaxed text-slate-500 sm:text-lg lg:text-xl">
+                    Thiết kế tối giản. Trải nghiệm hiện đại.
                 </p>
-            </section>
+            </section> */}
 
-            {/* Products */}
-            <section className="max-w-7xl mx-auto px-6 pb-24">
-                <div className="grid gap-8 md:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4">
-                    {products.map((product) => (
+            <section className="mx-auto max-w-7xl px-4 py-16 sm:px-6 lg:px-8 lg:pb-24">
+                <div className="grid grid-cols-2 gap-4 md:grid-cols-3 lg:gap-6 xl:grid-cols-4">
+                    {products.map(product => (
                         <article
                             key={product.id}
-                            className="
-                bg-white
-                rounded-[32px]
-                p-6
-                shadow-sm
-                hover:shadow-xl
-                transition
-              "
+                            className="rounded-3xl bg-white p-3 shadow-sm transition-all duration-300 hover:-translate-y-1 hover:shadow-xl sm:p-5 lg:p-6"
                         >
-                            <div
-                                onClick={() =>
-                                    onDetail(product)
-                                }
-                                className="cursor-pointer"
-                            >
-                                <div className="aspect-square rounded-3xl overflow-hidden bg-slate-100">
+                            <div onClick={() => onDetail(product)} className="cursor-pointer">
+                                <div className="aspect-square overflow-hidden rounded-2xl bg-slate-100 sm:rounded-3xl">
                                     <img
                                         src={product.image}
-                                        className="w-full h-full object-cover"
+                                        alt={product.name}
+                                        className="h-full w-full object-cover transition duration-500 hover:scale-105"
                                     />
                                 </div>
 
-                                <h3 className="mt-6 text-xl font-semibold">
+                                <h3 className="mt-4 text-base font-semibold sm:text-lg lg:mt-6 lg:text-xl">
                                     {product.name}
                                 </h3>
 
-                                <p className="mt-2 text-slate-500 line-clamp-2">
+                                <p className="mt-2 line-clamp-2 text-sm text-slate-500 sm:text-base">
                                     {product.description}
                                 </p>
                             </div>
 
-                            <div className="mt-6 flex justify-between items-center">
-                                <span className="text-2xl font-semibold">
-                                    {(
-                                        product.price ?? 0
-                                    ).toLocaleString()}
-                                    ₫
+                            <div className="mt-4 flex items-center justify-between lg:mt-6">
+                                <span className="text-lg font-semibold sm:text-xl lg:text-2xl">
+                                    {(product.price ?? 0).toLocaleString()}₫
                                 </span>
 
                                 <button
-                                    onClick={() =>
-                                        onAdd(product)
-                                    }
-                                    className="px-5 py-2 rounded-full bg-black text-white"
+                                    onClick={() => onAdd(product)}
+                                    className="cursor-pointer rounded-full bg-black px-3 py-2 text-sm font-medium text-white transition-all duration-200 hover:bg-zinc-800 active:scale-95 sm:px-5"
                                 >
                                     Mua
                                 </button>
