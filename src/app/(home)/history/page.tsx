@@ -1,6 +1,6 @@
 "use client";
 
-import { useState } from "react";
+import { useEffect, useState } from "react";
 import { toast } from "sonner";
 import {
   collection,
@@ -11,6 +11,10 @@ import {
 import { db } from "@/core/services/firebase";
 import { Order } from "@/core/services/data-base";
 import OrderHistoryItem from "./OrderHistoryItem";
+import OrderSummary from "./OrderSummary";
+
+const STORAGE_KEY = "history_orders";
+const CUSTOMER_KEY = "history_customer";
 
 const post = (url: string, body: any) =>
   fetch(url, {
@@ -24,11 +28,13 @@ type Customer = {
   otp: string;
 };
 
+const EMPTY_CUSTOMER: Customer = { email: "", otp: "" };
+
 export default function HistoryPage() {
-  const [customer, setCustomer] = useState<Customer>({
-    email: "",
-    otp: "",
-  });
+  // ❌ KHÔNG đọc localStorage ở đây nữa
+  const [customer, setCustomer] = useState<Customer>(EMPTY_CUSTOMER);
+  const [orders, setOrders] = useState<Order[]>([]);
+  const [verified, setVerified] = useState(false);
 
   const [loading, setLoading] = useState({
     otp: false,
@@ -36,12 +42,38 @@ export default function HistoryPage() {
     fetch: false,
   });
 
-  const [verified, setVerified] = useState(false);
-  const [orders, setOrders] = useState<Order[]>([]);
+  const [hydrated, setHydrated] = useState(false);
 
   const set = (k: keyof Customer, v: string) =>
     setCustomer(p => ({ ...p, [k]: v }));
 
+  // ================= HYDRATE FROM LOCALSTORAGE =================
+  useEffect(() => {
+    const savedCustomer = localStorage.getItem(CUSTOMER_KEY);
+    const savedOrders = localStorage.getItem(STORAGE_KEY);
+
+    if (savedCustomer) setCustomer(JSON.parse(savedCustomer));
+    if (savedOrders) {
+      const parsed = JSON.parse(savedOrders);
+      setOrders(parsed);
+      setVerified(parsed.length > 0);
+    }
+
+    setHydrated(true);
+  }, []);
+
+  // ================= PERSIST =================
+  useEffect(() => {
+    if (!hydrated) return;
+    localStorage.setItem(CUSTOMER_KEY, JSON.stringify(customer));
+  }, [customer, hydrated]);
+
+  useEffect(() => {
+    if (!hydrated) return;
+    localStorage.setItem(STORAGE_KEY, JSON.stringify(orders));
+  }, [orders, hydrated]);
+
+  // ================= VALIDATE =================
   const validateEmail = () => {
     if (!customer.email.trim()) {
       toast.error("Vui lòng nhập email");
@@ -61,7 +93,6 @@ export default function HistoryPage() {
   // ================= OTP =================
   const sendOtp = async () => {
     if (!validateEmail()) return;
-    if (loading.otp) return;
 
     setLoading(p => ({ ...p, otp: true }));
 
@@ -121,114 +152,69 @@ export default function HistoryPage() {
     }
   };
 
+  // ================= UI =================
   return (
     <div className="min-h-screen bg-gradient-to-b from-zinc-50 to-white px-4 py-8">
       <div className="mx-auto max-w-7xl grid gap-6 lg:grid-cols-[360px_1fr]">
 
-        {/* ================= LEFT SIDEBAR ================= */}
-        <aside className="lg:sticky lg:top-6 lg:self-start space-y-5">
+        {/* LEFT */}
+        <aside className="space-y-5">
+          <div className="rounded-3xl border bg-white p-6">
+            <h1 className="text-2xl font-semibold">Tra cứu đơn</h1>
 
-          {/* Search */}
-          <div className="rounded-3xl border border-zinc-200 bg-white/80 backdrop-blur-xl shadow-sm p-6">
+            <input
+              value={customer.email}
+              onChange={e => set("email", e.target.value)}
+              placeholder="Email"
+              className="mt-4 w-full rounded-2xl border px-4 py-3"
+            />
 
-            <h1 className="text-2xl font-semibold tracking-tight">
-              Tra cứu đơn hàng
-            </h1>
-
-            <p className="mt-2 text-sm text-zinc-500">
-              Nhập email và mã OTP để xem lịch sử mua hàng.
-            </p>
-
-            <div className="mt-6 space-y-3">
-
+            <div className="mt-3 flex gap-2">
               <input
-                value={customer.email}
-                onChange={e => set("email", e.target.value)}
-                placeholder="Email"
-                className="w-full rounded-2xl border border-zinc-200 bg-zinc-50 px-4 py-3 outline-none transition focus:border-black"
+                value={customer.otp}
+                onChange={e => set("otp", e.target.value)}
+                placeholder="OTP"
+                className="flex-1 rounded-2xl border px-4 py-3"
               />
 
-              <div className="flex items-center gap-2">
-                <input
-                  className="min-w-0 flex-1 rounded-2xl border border-zinc-200 bg-zinc-50 px-4 py-3 outline-none transition focus:border-black"
-                  placeholder="OTP"
-                  value={customer.otp}
-                  onChange={e => set("otp", e.target.value)}
-                />
-
-                <button
-                  type="button"
-                  onClick={sendOtp}
-                  className="shrink-0 whitespace-nowrap rounded-2xl bg-black px-5 py-3 text-sm font-medium text-white cursor-pointer transition hover:opacity-90"
-                >
-                  {loading.otp ? "Đang gửi..." : "Lấy OTP"}
-                </button>
-              </div>
-
               <button
-                onClick={searchOrders}
-                className="w-full rounded-2xl bg-emerald-600 py-3 font-medium text-white cursor-pointer transition hover:opacity-90"
+                onClick={sendOtp}
+                className="rounded-2xl bg-black px-4 text-white"
               >
-                {loading.verify ? "Đang tìm..." : "Tìm đơn hàng"}
+                OTP
               </button>
-
             </div>
+
+            <button
+              onClick={searchOrders}
+              className="mt-3 w-full rounded-2xl bg-emerald-600 py-3 text-white"
+            >
+              Tìm đơn
+            </button>
           </div>
 
-          {/* Statistics */}
-          {verified && (
-            <div className="rounded-3xl border border-zinc-200 bg-white/80 backdrop-blur-xl shadow-sm p-6 space-y-5">
+          {/* SUMMARY */}
 
-              <div>
-                <p className="text-sm text-zinc-500">
-                  Tổng đơn hàng
-                </p>
-
-                <p className="mt-1 text-4xl font-semibold">
-                  {orders.length}
-                </p>
-              </div>
-
-              <div className="border-t pt-5">
-                <p className="text-sm text-zinc-500">
-                  Tổng chi tiêu
-                </p>
-
-                <p className="mt-1 text-2xl font-semibold">
-                  {orders
-                    .reduce((sum, o) => sum + (o.amount ?? 0), 0)
-                    .toLocaleString()}
-                  ₫
-                </p>
-              </div>
-
-            </div>
-          )}
-
+          <OrderSummary orders={orders} />
         </aside>
 
-        {/* ================= RIGHT CONTENT ================= */}
-        <section className="min-w-0">
-
-          {!verified ? (
-            <div className="flex h-80 items-center justify-center rounded-3xl border border-dashed border-zinc-300 bg-white text-zinc-400">
-              Nhập email và OTP để xem đơn hàng
+        {/* RIGHT */}
+        <section>
+          {!hydrated ? (
+            <div className="text-center text-zinc-400">
+              Loading...
             </div>
-          ) : orders.length === 0 ? (
-            <div className="flex h-80 items-center justify-center rounded-3xl border border-dashed border-zinc-300 bg-white text-zinc-400">
-              Không tìm thấy đơn hàng
+          ) : !verified ? (
+            <div className="text-center text-zinc-400">
+              Nhập email + OTP
             </div>
           ) : (
-            <div className="space-y-5">
-              {orders.map(order => (
-                <OrderHistoryItem
-                  key={order.id}
-                  order={order}
-                />
+            <div className="space-y-4">
+              {orders.map(o => (
+                <OrderHistoryItem key={o.id} order={o} />
               ))}
             </div>
           )}
-
         </section>
 
       </div>
