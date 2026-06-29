@@ -14,7 +14,7 @@ export default function Main({ products, onDetail, onAdd }: Props) {
     <>
       <main className="min-h-screen bg-[#f5f5f7]">
 
-        {/* <section className="px-4 py-16 text-center sm:px-6 sm:py-20 lg:px-8 lg:py-24">
+        <section className="px-4 py-16 text-center sm:px-6 sm:py-20 lg:px-8 lg:py-24">
           <h2 className="text-4xl font-semibold tracking-tight sm:text-5xl lg:text-6xl">
             Khám phá sản phẩm.
           </h2>
@@ -22,9 +22,9 @@ export default function Main({ products, onDetail, onAdd }: Props) {
           <p className="mx-auto mt-5 max-w-2xl text-base leading-relaxed text-slate-500 sm:text-lg lg:text-xl">
             Thiết kế tối giản. Trải nghiệm hiện đại.
           </p>
-        </section> */}
+        </section>
 
-        <section className="mx-auto max-w-7xl px-4 py-16 sm:px-6 lg:px-8 lg:pb-24">
+        <section className="mx-auto max-w-7xl px-4 pb-16 sm:px-6 lg:px-8 lg:pb-24">
           <div className="grid grid-cols-2 gap-4 md:grid-cols-3 lg:gap-6 xl:grid-cols-4">
             {products.map((product) => (
               <article
