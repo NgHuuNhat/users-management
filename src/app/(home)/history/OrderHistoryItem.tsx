@@ -16,7 +16,7 @@ export default function OrderHistoryItem({ order }: Props) {
             {/* HEADER */}
             <header className="flex items-start justify-between gap-4 border-b border-zinc-100 px-6 py-5">
                 <div>
-                    <h2 className="text-2xl font-semibold tracking-tight">
+                    <h2 className="text-xl font-semibold tracking-tight">
                         Mã đơn: {order.id}
                     </h2>
 
@@ -25,7 +25,7 @@ export default function OrderHistoryItem({ order }: Props) {
                     </p>
                 </div>
 
-                <div className="flex flex-col items-end gap-2">
+                <div className="flex gap-2">
                     <span className="rounded-full bg-zinc-100 px-4 py-2 text-sm font-medium text-zinc-700">
                         Thanh toán: {order.paymentStatus}
                     </span>
