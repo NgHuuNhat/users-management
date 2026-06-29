@@ -173,7 +173,7 @@ export default function HistoryPage() {
             <button
               onClick={searchOrders}
               disabled={isLoadingSearch}
-              className="cursor-pointer mt-3 w-full rounded-2xl py-3 text-white bg-emerald-600"
+              className="cursor-pointer mt-3 w-full rounded-2xl py-3 text-white bg-black"
             >
               {isLoadingSearch ? "Đang tìm..." : "Tìm đơn"}
             </button>
