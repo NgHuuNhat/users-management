@@ -1,69 +1,68 @@
 export interface Product {
-    id: string
-    name: string
-    price: number | null
-    image: string
-    description: string
-    [key: string]: any
+    id: string                      // PK
+    name: string                    // Tên sản phẩm
+    price: number | null            // Giá bán
+    image: string                   // Ảnh sản phẩm
+    description: string             // Mô tả sản phẩm
+    [key: string]: any              // Thuộc tính mở rộng
 }
 
 export interface OrderItem {
-    productId: Product['id'] // FK -> Product.id
-    quantity: number
-    // lưu giá product tại thời điểm mua -> sau upudate product thì orderItem ko bị ảnh hưởng.
-    name: Product['name']
-    price: Product['price']
-    image: Product['image']
-    [key: string]: any
+    productId: Product['id']        // FK -> Product.id
+    quantity: number                // Số lượng mua
+    name: Product['name']           // Snapshot tên sản phẩm tại thời điểm mua
+    price: Product['price']         // Snapshot giá tại thời điểm mua
+    image: Product['image']         // Snapshot ảnh tại thời điểm mua
+    [key: string]: any              // Thuộc tính mở rộng
 }
 
 export interface Order {
-    id: string
-    items: OrderItem[]
-    amount: number
-    status: 'pending' | 'processing' | 'completed' | 'cancelled'
-    paymentStatus: 'pending' | 'paid' | 'failed' | 'refunded'
-    customer: {
-        name: string
-        phone: string
-        address: string
-        email: string
+    id: string                      // PK
+    items: OrderItem[]              // Danh sách sản phẩm
+    amount: number                  // Tổng tiền đơn hàng
+    status: 'pending' | 'processing' | 'completed' | 'cancelled' // Trạng thái đơn hàng
+    paymentStatus: 'pending' | 'paid' | 'failed' | 'refunded'     // Trạng thái thanh toán
+    customer: {                     // Thông tin khách hàng
+        name: string                // Họ tên
+        phone: string               // Số điện thoại
+        address: string             // Địa chỉ
+        email: string               // Email
     }
-    bank: {
-        transferAmount: number,
-        transactionId: number,
-        transactionDate: string,
-        content: string,
-    },
-    createdAt: any,
-    debtAmount?: any; // số tiền còn nợ number
-    cashReceivedManual?: number; //số tiền mặt đã nhận
-    historyDebtAmount?: number;  // nợ từng có
+    bank: {                         // Thông tin chuyển khoản
+        transferAmount: number      // Số tiền chuyển khoản
+        transactionId: number       // ID giao dịch ngân hàng
+        transactionDate: string     // Thời gian giao dịch
+        content: string             // Nội dung chuyển khoản
+    }
+    createdAt: any                  // Thời điểm tạo đơn
+    debtAmount?: number             // Số tiền còn nợ
+    cashReceivedManual?: number     // Tiền mặt đã nhận
+    historyDebtAmount?: number      // Tổng số tiền từng nợ
 }
 
 export interface User {
-    id: string
-    email: string
-    name: string
-    phone: string
-    address: string
-    role: 'user' | 'admin'
-    isActive: boolean
+    id: string                      // PK
+    email: string                   // Email
+    name: string                    // Họ tên
+    phone: string                   // Số điện thoại
+    address: string                 // Địa chỉ
+    role: 'user' | 'admin'          // Vai trò
+    isActive: boolean               // Trạng thái hoạt động
 }
 
 export interface Webhook {
-    id: number
-    gateway: string
-    transactionDate: string
-    accountNumber: string
-    subAccount: any
-    code: any
-    content: string
-    transferType: string
-    description: string
-    transferAmount: number
-    referenceCode: string
-    accumulated: number
-    transactionId: number
-    orderId?: Order['id'] // FK -> Order.id
+    id: number                      // PK
+    gateway: string                 // Cổng thanh toán
+    transactionDate: string         // Thời gian giao dịch
+    accountNumber: string           // Số tài khoản
+    subAccount: any                 // Tài khoản phụ
+    code: any                       // Mã giao dịch từ gateway
+    content: string                 // Nội dung chuyển khoản
+    transferType: string            // Loại giao dịch (IN/OUT)
+    description: string             // Mô tả giao dịch
+    transferAmount: number          // Số tiền giao dịch
+    referenceCode: string           // Mã tham chiếu
+    accumulated: number             // Số dư sau giao dịch
+    transactionId: number           // ID giao dịch ngân hàng
+    orderId?: Order['id']           // FK -> Order.id
 }
