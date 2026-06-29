@@ -8,6 +8,16 @@ import { useCartStore } from "./cart-store";
 import { formatDate } from "@/core/shared/format-date";
 import { OrderItem } from "@/core/services/data-base";
 
+import { toast } from "sonner";
+
+import {
+  Sheet,
+  SheetContent,
+  SheetHeader,
+  SheetTitle,
+} from "@/components/ui/sheet";
+import { shortOrderId } from "@/core/shared/format-order";
+
 type Step = "form" | "qr" | "success";
 
 type Customer = {
@@ -26,7 +36,8 @@ const post = (url: string, body: any) =>
   }).then(r => r.json());
 
 export default function Cart() {
-  const { items, isOpen, closeCart, increase, decrease, cartCount } = useCartStore();
+  const [paymentMethod, setPaymentMethod] = useState<"online" | "cod">("online");
+  const { items, isOpen, closeCart, increase, decrease, cartCount, clear } = useCartStore();
 
   const [step, setStep] = useState<Step | null>(null);
   const [qrUrl, setQrUrl] = useState("");
@@ -34,10 +45,7 @@ export default function Cart() {
   const [order, setOrder] = useState<any>(null);
   const [error, setError] = useState("");
 
-  const [loading, setLoading] = useState({
-    otp: false,
-    submit: false,
-  });
+  const [loading, setLoading] = useState({ otp: false, submit: false });
 
   const [customer, setCustomer] = useState<Customer>({
     name: "",
@@ -54,6 +62,27 @@ export default function Cart() {
 
   const set = (k: keyof Customer, v: string) =>
     setCustomer(p => ({ ...p, [k]: v }));
+
+  /* ================= SAFE VALIDATION ================= */
+  const validateAll = () => {
+    const fields: Record<keyof Customer, string> = {
+      name: "Vui lòng nhập tên",
+      phone: "Vui lòng nhập số điện thoại",
+      address: "Vui lòng nhập địa chỉ",
+      email: "Vui lòng nhập email",
+      otp: "Vui lòng nhập OTP",
+    };
+
+    for (const key in fields) {
+      const k = key as keyof Customer;
+      if (!customer[k] || !customer[k].trim()) {
+        toast.error(fields[k]);
+        return false;
+      }
+    }
+
+    return true;
+  };
 
   /* ================= FIRESTORE ================= */
   useEffect(() => {
@@ -73,10 +102,12 @@ export default function Cart() {
   useEffect(() => {
     if (step !== "qr") return setError("");
 
-    const channel = getPusherClient()
-      .subscribe("checkout-errors");
+    const channel = getPusherClient().subscribe("checkout-errors");
 
-    channel.bind("error-event", (d: any) => setError(d.message));
+    channel.bind("error-event", (d: any) => {
+      setError(d.message);
+      toast.error(d.message);
+    });
 
     return () => {
       channel.unbind_all();
@@ -84,34 +115,50 @@ export default function Cart() {
     };
   }, [step]);
 
-  /* ================= ACTIONS ================= */
+  /* ================= OTP ================= */
   const sendOtp = async () => {
-    if (!customer.email) return alert("Nhập email");
+    if (!customer.email.trim()) {
+      toast.error("Vui lòng nhập email trước");
+      return;
+    }
+
+    if (loading.otp) return; // chống spam
 
     setLoading(p => ({ ...p, otp: true }));
 
-    await post("/api/history", {
-      type: "send",
-      email: customer.email,
-    }).finally(() => setLoading(p => ({ ...p, otp: false })));
+    try {
+      await post("/api/history", {
+        type: "send",
+        email: customer.email,
+      });
+
+      toast.success("OTP đã gửi");
+    } catch {
+      toast.error("Không gửi được OTP");
+    } finally {
+      setLoading(p => ({ ...p, otp: false }));
+    }
   };
 
+  /* ================= CREATE ORDER (SAFE) ================= */
   const createOrder = async () => {
-    const { name, phone, address, otp, email } = customer;
+    if (loading.submit) return; // chống spam click
 
-    if (!name || !phone || !address || !otp)
-      return alert("Thiếu thông tin");
+    if (!validateAll()) return;
 
     setLoading(p => ({ ...p, submit: true }));
 
     try {
       const otpRes = await post("/api/history", {
         type: "verify",
-        email,
-        otp,
+        email: customer.email,
+        otp: customer.otp,
       });
 
-      if (!otpRes.success) return alert("OTP sai");
+      if (!otpRes.success) {
+        toast.error("OTP không đúng");
+        return;
+      }
 
       const res = await post("/api/checkout/create", {
         amount: total,
@@ -122,6 +169,10 @@ export default function Cart() {
       setQrUrl(res.qrUrl);
       setOrderId(res.orderId);
       setStep("qr");
+
+      toast.success("Tạo đơn thành công");
+    } catch {
+      toast.error("Có lỗi xảy ra");
     } finally {
       setLoading(p => ({ ...p, submit: false }));
     }
@@ -130,132 +181,183 @@ export default function Cart() {
   const confirmPaid = async () => {
     await new Promise(r => setTimeout(r, 500));
     setStep("success");
+    toast.success("Thanh toán thành công");
   };
 
-  /* ================= UI ================= */
-  if (!isOpen) return null;
-
   return (
-    <div className="fixed top-0 right-0 h-screen w-full sm:w-[420px] bg-white shadow-2xl z-50 flex flex-col">
+    <Sheet open={isOpen} onOpenChange={(v) => !v && closeCart()}>
+      <SheetContent side="right" className="w-full sm:w-[420px] flex flex-col p-0 [&>button]:cursor-pointer [&>button]:bg-gray-100">
 
-      {/* CART */}
-      <div className="p-6 flex-1 overflow-auto">
-        <div className="flex justify-between">
-          <h2 className="font-semibold">Cart</h2>
-          <button onClick={closeCart} className="w-10 h-10 bg-black text-white rounded-full">✕</button>
-        </div>
+        {/* HEADER */}
+        <SheetHeader className="p-4 border-b">
+          <SheetTitle>Giỏ hàng của bạn ({cartCount})</SheetTitle>
+        </SheetHeader>
 
-        <div className="mt-6 space-y-4">
+        {/* BODY */}
+        <div className="flex-1 overflow-auto p-4 space-y-4">
           {items.map(i => (
             <div key={i.productId} className="flex gap-3">
               <img src={i.image} className="w-20 h-20 rounded-xl object-cover" />
-              <div className="flex-1">
-                <p>{i.name}</p>
-                <p className="font-semibold">{i.price?.toLocaleString()}₫</p>
 
-                <div className="flex gap-3 mt-2">
-                  <button onClick={() => decrease(i.productId)} className="px-4">-</button>
+              <div className="flex-1">
+                <p className="font-medium">{i.name}</p>
+                <p>{i.price?.toLocaleString()}₫</p>
+
+                <div className="flex gap-3 mt-2 items-center">
+                  <button onClick={() => decrease(i.productId)} className="bg-gray-100 px-2 rounded cursor-pointer">-</button>
                   <span>{i.quantity}</span>
-                  <button onClick={() => increase(i.productId)} className="px-4">+</button>
+                  <button onClick={() => increase(i.productId)} className="bg-gray-100 px-2 rounded cursor-pointer">+</button>
                 </div>
               </div>
             </div>
           ))}
         </div>
-      </div>
 
-      {/* FOOTER */}
-      <div className="border-t p-4">
-        <div className="flex justify-between font-semibold">
-          <span>Total {cartCount}</span>
-          <span>{total.toLocaleString()}₫</span>
+        {/* FOOTER */}
+        <div className="border-t p-4 space-y-3">
+          <div className="flex justify-between font-semibold">
+            <span>Total ({cartCount})</span>
+            <span>{total.toLocaleString()}₫</span>
+          </div>
+
+          <button
+            onClick={() => {
+              if (items.length === 0) {
+                toast.error("Giỏ hàng đang trống");
+                return;
+              }
+              setStep("form");
+            }}
+            className="w-full py-3 bg-black text-white rounded-full cursor-pointer"
+          >
+            Đặt hàng
+          </button>
         </div>
 
-        <button
-          onClick={() => setStep("form")}
-          className="w-full mt-3 py-3 bg-black text-white rounded-full"
-        >
-          Checkout
-        </button>
-      </div>
+        {/* CHECKOUT */}
+        {step && (
+          <div className="fixed inset-0 bg-black/40 flex items-center justify-center p-4 z-[60]">
+            <div className="w-full max-w-lg bg-white rounded-2xl p-5">
 
-      {/* MODAL */}
-      {step && (
-        <div className="fixed inset-0 bg-black/40 flex items-center justify-center p-4 z-[60]">
-          <div className="w-full max-w-xl bg-white rounded-3xl p-6">
+              <div className="flex justify-between mb-3">
+                <h3 className="font-semibold text-xl">Thông tin nhận hàng</h3>
+                <button onClick={() => setStep(null)} className="cursor-pointer bg-gray-100 px-2 rounded">✕</button>
+              </div>
 
-            <div className="flex justify-between mb-3">
-              <h3 className="font-semibold">Checkout</h3>
-              <button onClick={() => setStep(null)} className="w-9 h-9 bg-black text-white rounded-full">✕</button>
-            </div>
+              {step === "form" && (
+                <div className="space-y-3">
 
-            {step === "form" && (
-              <div className="space-y-3">
-                {["name", "phone", "address", "email"].map(k => (
-                  <input
-                    key={k}
-                    className="w-full border rounded-xl p-3"
-                    placeholder={k}
-                    value={(customer as any)[k]}
-                    onChange={e => set(k as any, e.target.value)}
-                  />
-                ))}
+                  {(["name", "phone", "address", "email"] as const).map(k => (
+                    <input
+                      key={k}
+                      required
+                      className="w-full border rounded-xl p-3"
+                      placeholder={k}
+                      value={customer[k]}
+                      onChange={e => set(k, e.target.value)}
+                    />
+                  ))}
 
-                <div className="flex gap-2">
-                  <input
-                    className="flex-1 border rounded-xl p-3"
-                    placeholder="OTP"
-                    value={customer.otp}
-                    onChange={e => set("otp", e.target.value)}
-                  />
+                  <div className="flex gap-2">
+                    <input
+                      required
+                      className="flex-1 border rounded-xl p-3"
+                      placeholder="OTP"
+                      value={customer.otp}
+                      onChange={e => set("otp", e.target.value)}
+                    />
 
-                  <button onClick={sendOtp} className="px-4 bg-zinc-100 rounded-xl">
-                    {loading.otp ? "..." : "Lấy mã OTP"}
+                    <button
+                      onClick={sendOtp}
+                      className="px-4 bg-black text-white rounded-xl cursor-pointer"
+                    >
+                      {loading.otp ? "..." : "Lấy OTP"}
+                    </button>
+                  </div>
+
+                  <button
+                    onClick={() => {
+                      setPaymentMethod("online");
+                      createOrder();
+                    }}
+                    className="w-full py-3 bg-black text-white rounded-full cursor-pointer"
+                  >
+                    Xác nhận đặt hàng
+                  </button>
+
+                </div>
+              )}
+
+              {step === "qr" && (
+                <div className="text-center space-y-4">
+                  {error && <p className="text-red-500">{error}</p>}
+
+                  <img src={qrUrl} className="w-60 mx-auto" />
+
+                  {/* ORDER ID */}
+                  <div className="text-sm text-gray-500">
+                    Mã đơn hàng:{" "}
+                    <span className="font-semibold text-black">
+                      ****{shortOrderId(orderId)}
+                    </span>
+                  </div>
+
+                  <button
+                    onClick={() => {
+                      setPaymentMethod("cod");
+                      confirmPaid()
+                    }}
+                    className="w-full py-3 bg-green-600 text-white rounded-full cursor-pointer"
+                  >
+                    Thanh toán khi nhận hàng
                   </button>
                 </div>
+              )}
 
-                <button
-                  onClick={createOrder}
-                  className="w-full py-3 bg-black text-white rounded-full"
-                >
-                  Confirm
-                </button>
-              </div>
-            )}
+              {step === "success" && (
+                <div className="text-center space-y-3">
+                  <div className="text-3xl">✓</div>
 
-            {step === "qr" && (
-              <div className="text-center space-y-4">
-                {error && <div className="text-red-500">{error}</div>}
-                <img src={qrUrl} className="w-64 mx-auto" />
+                  {/* STATUS MESSAGE */}
+                  <div className="text-sm font-medium text-black">
+                    {paymentMethod === "online" ? (
+                      <span>Thanh toán thành công, đơn hàng đang được chuẩn bị</span>
+                    ) : (
+                      <span>Đặt hàng thành công</span>
+                    )}
+                  </div>
 
-                <button
-                  onClick={confirmPaid}
-                  className="w-full py-3 bg-emerald-600 text-white rounded-full"
-                >
-                  Cash on delivery
-                </button>
-              </div>
-            )}
+                  {/* ORDER ID */}
+                  <div className="text-sm text-gray-500">
+                    Mã đơn hàng:{" "}
+                    <span className="font-semibold text-black">
+                      ****{shortOrderId(orderId)}
+                    </span>
+                  </div>
 
-            {step === "success" && (
-              <div className="text-center space-y-3">
-                <div className="text-3xl">✓</div>
-                <p className="text-sm text-gray-500">
-                  {order?.createdAt ? formatDate(order.createdAt) : ""}
-                </p>
+                  {/* TIME */}
+                  <p className="text-sm text-gray-500">
+                    {order?.createdAt ? formatDate(order.createdAt) : ""}
+                  </p>
 
-                <button
-                  onClick={closeCart}
-                  className="w-full py-3 bg-black text-white rounded-full"
-                >
-                  Close
-                </button>
-              </div>
-            )}
+                  <button
+                    onClick={() => {
+                      setStep(null)
+                      closeCart()
+                      clear()
+                    }}
+                    className="w-full py-3 bg-black text-white rounded-full cursor-pointer"
+                  >
+                    Close
+                  </button>
+                </div>
+              )}
 
+            </div>
           </div>
-        </div>
-      )}
-    </div>
+        )}
+
+      </SheetContent>
+    </Sheet>
   );
 }
