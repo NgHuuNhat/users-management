@@ -13,6 +13,7 @@ import { Order } from "@/core/services/data-base";
 import OrderHistoryItem from "./OrderHistoryItem";
 import OrderSummary from "./OrderSummary";
 import { useOtpCountdown } from "@/core/shared/useOtpCountdown";
+import { useCartStore } from "@/core/features/(home)/cart/cart-store";
 
 const STORAGE_KEY = "history_orders";
 const CUSTOMER_KEY = "history_customer";
@@ -197,7 +198,7 @@ export default function HistoryPage() {
               <button
                 onClick={sendOtp}
                 disabled={loading.otp || !isExpired}
-                className={`shrink-0 min-w-[90px] rounded-2xl px-4 py-3 text-white whitespace-nowrap flex items-center justify-center transition ${loading.otp ? "bg-zinc-400" : "bg-black"
+                className={`cursor-pointer shrink-0 min-w-[90px] rounded-2xl px-4 py-3 text-white whitespace-nowrap flex items-center justify-center transition ${loading.otp ? "bg-zinc-400" : "bg-black"
                   }`}
               >
                 {loading.otp ? "Đang gửi..." : isExpired ? "Lấy OTP" : `${countdown}s`}
@@ -207,7 +208,7 @@ export default function HistoryPage() {
             <button
               onClick={searchOrders}
               disabled={loading.search}
-              className={`mt-3 w-full rounded-2xl py-3 text-white transition
+              className={`cursor-pointer mt-3 w-full rounded-2xl py-3 text-white transition
                 ${loading.search ? "bg-emerald-400 cursor-not-allowed" : "bg-emerald-600 hover:opacity-90"}
               `}
             >
