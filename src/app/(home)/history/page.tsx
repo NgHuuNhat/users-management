@@ -2,18 +2,13 @@
 
 import { useEffect, useState } from "react";
 import { toast } from "sonner";
-import {
-  collection,
-  getDocs,
-  query,
-  where,
-} from "firebase/firestore";
+import { collection, getDocs, query, where } from "firebase/firestore";
 import { db } from "@/core/services/firebase";
 import { Order } from "@/core/services/data-base";
-import OrderHistoryItem from "./OrderHistoryItem";
 import OrderSummary from "./OrderSummary";
 import { useOtpCountdown } from "@/core/shared/useOtpCountdown";
 import { useCartStore } from "@/core/features/(home)/cart/cart-store";
+import OrderHistoryItem from "./OrderHistoryItem";
 
 const STORAGE_KEY = "history_orders";
 const CUSTOMER_KEY = "history_customer";
@@ -25,90 +20,70 @@ const post = (url: string, body: any) =>
     body: JSON.stringify(body),
   }).then(r => r.json());
 
-type Customer = {
-  email: string;
-  otp: string;
-};
-
+type Customer = { email: string; otp: string };
 const EMPTY_CUSTOMER: Customer = { email: "", otp: "" };
+
+const load = (key: string, fallback: any) => {
+  if (typeof window === "undefined") return fallback;
+  try {
+    return JSON.parse(localStorage.getItem(key) || "") || fallback;
+  } catch {
+    return fallback;
+  }
+};
 
 export default function HistoryPage() {
   const [customer, setCustomer] = useState<Customer>(EMPTY_CUSTOMER);
   const [orders, setOrders] = useState<Order[]>([]);
   const [verified, setVerified] = useState(false);
+  const [expiresAt, setExpiresAt] = useState(0);
 
-  const [loading, setLoading] = useState({
-    otp: false,
-    search: false,
-  });
+  const [loading, setLoading] = useState<"idle" | "otp" | "search">("idle");
 
-  const [hydrated, setHydrated] = useState(false);
+  const { countdown, isExpired } = useOtpCountdown(expiresAt);
+  const { clear } = useCartStore();
 
   const set = (k: keyof Customer, v: string) =>
     setCustomer(p => ({ ...p, [k]: v }));
 
-  // Đếm ngược OTP
-  const [expiresAt, setExpiresAt] = useState(0);
-  const { countdown, isExpired } = useOtpCountdown(expiresAt);
-
-  // ================= HYDRATE =================
+  // ================= INIT =================
   useEffect(() => {
-    if (typeof window === "undefined") return;
-
-    const savedCustomer = localStorage.getItem(CUSTOMER_KEY);
-    const savedOrders = localStorage.getItem(STORAGE_KEY);
-
-    if (savedCustomer) {
-      try {
-        setCustomer(JSON.parse(savedCustomer));
-      } catch { }
-    }
-
-    if (savedOrders) {
-      try {
-        const parsed = JSON.parse(savedOrders);
-        setOrders(parsed);
-        setVerified(parsed.length > 0);
-      } catch { }
-    }
-
-    setHydrated(true);
+    setCustomer(load(CUSTOMER_KEY, EMPTY_CUSTOMER));
+    const saved = load(STORAGE_KEY, []);
+    setOrders(saved);
+    setVerified(saved.length > 0);
   }, []);
 
   // ================= PERSIST =================
   useEffect(() => {
-    if (!hydrated) return;
     localStorage.setItem(CUSTOMER_KEY, JSON.stringify(customer));
-  }, [customer, hydrated]);
+  }, [customer]);
 
   useEffect(() => {
-    if (!hydrated) return;
     localStorage.setItem(STORAGE_KEY, JSON.stringify(orders));
-  }, [orders, hydrated]);
+  }, [orders]);
 
-  // ================= VALIDATE =================
-  const validateEmail = () => {
-    if (!customer.email.trim()) {
-      toast.error("Vui lòng nhập email");
-      return false;
-    }
+  // ================= COMMON =================
+  const validate = () => {
+    if (!customer.email.trim()) return toast.error("Nhập email"), false;
+    if (!customer.otp.trim()) return toast.error("Nhập OTP"), false;
     return true;
   };
 
-  const validateOtp = () => {
-    if (!customer.otp.trim()) {
-      toast.error("Vui lòng nhập OTP");
-      return false;
-    }
-    return true;
+  const reset = () => {
+    setCustomer(EMPTY_CUSTOMER);
+    setOrders([]);
+    setVerified(false);
+    setExpiresAt(0);
+    clear();
   };
 
   // ================= OTP =================
   const sendOtp = async () => {
-    if (!validateEmail()) return;
-    if (loading.otp) return;
+    if (!customer.email.trim()) return toast.error("Nhập email");
+    if (loading !== "idle") return;
 
-    setLoading(p => ({ ...p, otp: true }));
+    setLoading("otp");
 
     try {
       const res = await post("/api/history", {
@@ -117,22 +92,20 @@ export default function HistoryPage() {
       });
 
       setExpiresAt(res.expiresAt);
-
       toast.success("OTP đã gửi");
     } catch {
       toast.error("Gửi OTP thất bại");
     } finally {
-      setLoading(p => ({ ...p, otp: false }));
+      setLoading("idle");
     }
   };
 
   // ================= SEARCH =================
   const searchOrders = async () => {
-    if (!validateEmail()) return;
-    if (!validateOtp()) return;
-    if (loading.search) return;
+    if (!validate()) return;
+    if (loading !== "idle") return;
 
-    setLoading(p => ({ ...p, search: true }));
+    setLoading("search");
 
     try {
       const res = await post("/api/history", {
@@ -141,22 +114,13 @@ export default function HistoryPage() {
         otp: customer.otp,
       });
 
-      if (!res.success) {
-        toast.error(res.message);
-        return;
-      }
+      if (!res.success) return toast.error(res.message);
 
-      const q = query(
-        collection(db, "orders"),
-        where("customer.email", "==", customer.email)
+      const snap = await getDocs(
+        query(collection(db, "orders"), where("customer.email", "==", customer.email))
       );
 
-      const snap = await getDocs(q);
-
-      const data: Order[] = snap.docs.map(d => ({
-        id: d.id,
-        ...(d.data() as any),
-      }));
+      const data = snap.docs.map(d => ({ id: d.id, ...(d.data() as any) }));
 
       setOrders(data);
       setVerified(true);
@@ -165,18 +129,20 @@ export default function HistoryPage() {
     } catch {
       toast.error("Có lỗi xảy ra");
     } finally {
-      setLoading(p => ({ ...p, search: false }));
+      setLoading("idle");
     }
   };
+
+  const isLoadingOtp = loading === "otp";
+  const isLoadingSearch = loading === "search";
 
   // ================= UI =================
   return (
     <div className="min-h-screen bg-gradient-to-b from-zinc-50 to-white px-4 py-8">
       <div className="mx-auto grid max-w-7xl gap-6 lg:grid-cols-[360px_1fr]">
 
-        {/* ================= LEFT ================= */}
+        {/* LEFT */}
         <aside className="space-y-5">
-
           <div className="rounded-3xl border bg-white p-6">
             <h1 className="text-2xl font-semibold">Tra cứu đơn</h1>
 
@@ -197,44 +163,43 @@ export default function HistoryPage() {
 
               <button
                 onClick={sendOtp}
-                disabled={loading.otp || !isExpired}
-                className={`cursor-pointer shrink-0 min-w-[90px] rounded-2xl px-4 py-3 text-white whitespace-nowrap flex items-center justify-center transition ${loading.otp ? "bg-zinc-400" : "bg-black"
-                  }`}
+                disabled={isLoadingOtp || !isExpired}
+                className="cursor-pointer shrink-0 rounded-2xl px-4 py-3 text-white bg-black"
               >
-                {loading.otp ? "Đang gửi..." : isExpired ? "Lấy OTP" : `${countdown}s`}
+                {isLoadingOtp ? "..." : isExpired ? "Lấy OTP" : `${countdown}s`}
               </button>
             </div>
 
             <button
               onClick={searchOrders}
-              disabled={loading.search}
-              className={`cursor-pointer mt-3 w-full rounded-2xl py-3 text-white transition
-                ${loading.search ? "bg-emerald-400 cursor-not-allowed" : "bg-emerald-600 hover:opacity-90"}
-              `}
+              disabled={isLoadingSearch}
+              className="cursor-pointer mt-3 w-full rounded-2xl py-3 text-white bg-emerald-600"
             >
-              {loading.search ? "Đang tìm..." : "Tìm đơn"}
+              {isLoadingSearch ? "Đang tìm..." : "Tìm đơn"}
+            </button>
+
+            <button
+              onClick={reset}
+              className="cursor-pointer mt-3 w-full rounded-2xl py-3 border"
+            >
+              Reset
             </button>
           </div>
 
-          {/* SUMMARY */}
           <OrderSummary orders={orders} />
         </aside>
 
-        {/* ================= RIGHT ================= */}
+        {/* RIGHT */}
         <section>
-          {!hydrated ? (
-            <div className="text-center text-zinc-400">Loading...</div>
-          ) : !verified ? (
+          {!verified ? (
             <div className="text-center text-zinc-400">
-              Nhập email + OTP để xem đơn hàng
+              Nhập email + OTP
             </div>
           ) : orders.length === 0 ? (
-            <div className="text-center text-zinc-400">
-              Không có đơn hàng
-            </div>
+            <div className="text-center text-zinc-400">Không có đơn</div>
           ) : (
             <div className="space-y-4">
-              {orders.map((o, index: any) => (
+              {orders.map((o, index) => (
                 <OrderHistoryItem key={o.id} order={o} index={index} />
               ))}
             </div>
