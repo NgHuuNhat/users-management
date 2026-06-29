@@ -4,7 +4,7 @@ import { useState, useEffect } from "react";
 import { collection, onSnapshot, query, orderBy, doc, updateDoc } from "firebase/firestore";
 import { Webhook } from "@/core/services/data-base";
 import { db } from "@/core/services/firebase";
-import { formatDate } from "@/core/features/lib/format-date";
+import { formatDate } from "@/core/shared/format-date";
 // import { db } from "@/lib/firebase";
 // import { Webhook } from "@/types";
 

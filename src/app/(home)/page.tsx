@@ -3,23 +3,24 @@
 import { useEffect, useState } from "react";
 import { collection, onSnapshot } from "firebase/firestore";
 
-import { OrderItem, Product } from "@/core/services/data-base";
+import { Product } from "@/core/services/data-base";
 import { db } from "@/core/services/firebase";
 
-import Cart from "@/core/features/(home)/components/Cart";
-import Detail from "@/core/features/(home)/components/Detail";
-import Home from "@/core/features/(home)/components/Home";
+import Cart from "@/core/features/(home)/cart/Cart";
+import Detail from "@/core/features/(home)/detail/Detail";
+import { useCartStore } from "@/core/features/(home)/cart/cart-store";
+import Main from "@/core/features/(home)/Main";
 
 export default function Page() {
     const [products, setProducts] = useState<Product[]>([]);
     const [selected, setSelected] = useState<Product | null>(null);
-    const [cart, setCart] = useState<OrderItem[]>([]);
-    const [showCart, setShowCart] = useState(false);
+
+    const { addItem, increase, decrease, openCart } = useCartStore();
 
     useEffect(() => {
-        return onSnapshot(collection(db, "products"), snapshot => {
+        return onSnapshot(collection(db, "products"), (snapshot) => {
             setProducts(
-                snapshot.docs.map(doc => ({
+                snapshot.docs.map((doc) => ({
                     id: doc.id,
                     ...doc.data(),
                 })) as Product[]
@@ -27,78 +28,33 @@ export default function Page() {
         });
     }, []);
 
-    const addToCart = (product: Product) => {
-        setCart(prev => {
-            const exist = prev.find(item => item.productId === product.id);
-
-            if (!exist) {
-                return [
-                    ...prev,
-                    {
-                        productId: product.id,
-                        quantity: 1,
-                        name: product.name,
-                        price: product.price,
-                        image: product.image,
-                    },
-                ];
-            }
-
-            return prev.map(item =>
-                item.productId === product.id
-                    ? { ...item, quantity: item.quantity + 1 }
-                    : item
-            );
+    const handleAdd = (product: Product) => {
+        addItem({
+            productId: product.id,
+            name: product.name,
+            price: product.price,
+            image: product.image,
+            quantity: 1,
         });
 
-        setShowCart(true);
-    };
-
-    const increase = (productId: string) => {
-        setCart(prev =>
-            prev.map(item =>
-                item.productId === productId
-                    ? { ...item, quantity: item.quantity + 1 }
-                    : item
-            )
-        );
-    };
-
-    const decrease = (productId: string) => {
-        setCart(prev =>
-            prev
-                .map(item =>
-                    item.productId === productId
-                        ? { ...item, quantity: item.quantity - 1 }
-                        : item
-                )
-                .filter(item => item.quantity > 0)
-        );
+        openCart();
     };
 
     return (
         <>
-            <Home
+            <Main
                 products={products}
-                cart={cart}
-                onOpenCart={() => setShowCart(true)}
                 onDetail={setSelected}
-                onAdd={addToCart}
+                onAdd={handleAdd}
             />
 
             <Detail
                 product={selected}
                 onClose={() => setSelected(null)}
-                onAdd={addToCart}
+                onAdd={handleAdd}
             />
 
-            <Cart
-                open={showCart}
-                items={cart}
-                onClose={() => setShowCart(false)}
-                onIncrease={increase}
-                onDecrease={decrease}
-            />
+            <Cart />
         </>
     );
 }

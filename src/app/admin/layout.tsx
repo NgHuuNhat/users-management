@@ -1,6 +1,6 @@
 // import Sidebar from "@/components/admin/Sidebar";
 
-import Sidebar from "@/core/features/admin/components/Sidebar";
+import Sidebar from "@/core/features/admin/Sidebar";
 
 // import Sidebar from "./components/Sidebar";
 

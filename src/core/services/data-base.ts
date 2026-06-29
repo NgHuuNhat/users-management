@@ -5,6 +5,7 @@ export interface Product {
     image: string                   // Ảnh sản phẩm
     description: string             // Mô tả sản phẩm
     [key: string]: any              // Thuộc tính mở rộng
+    createdAt: string               // Thời điểm tạo sản phẩm
 }
 
 export interface OrderItem {
