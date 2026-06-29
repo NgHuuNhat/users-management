@@ -12,6 +12,7 @@ import { db } from "@/core/services/firebase";
 import { Order } from "@/core/services/data-base";
 import OrderHistoryItem from "./OrderHistoryItem";
 import OrderSummary from "./OrderSummary";
+import { useOtpCountdown } from "@/core/shared/useOtpCountdown";
 
 const STORAGE_KEY = "history_orders";
 const CUSTOMER_KEY = "history_customer";
@@ -44,6 +45,10 @@ export default function HistoryPage() {
 
   const set = (k: keyof Customer, v: string) =>
     setCustomer(p => ({ ...p, [k]: v }));
+
+  // Đếm ngược OTP
+  const [expiresAt, setExpiresAt] = useState(0);
+  const { countdown, isExpired } = useOtpCountdown(expiresAt);
 
   // ================= HYDRATE =================
   useEffect(() => {
@@ -105,10 +110,12 @@ export default function HistoryPage() {
     setLoading(p => ({ ...p, otp: true }));
 
     try {
-      await post("/api/history", {
+      const res = await post("/api/history", {
         type: "send",
         email: customer.email,
       });
+
+      setExpiresAt(res.expiresAt);
 
       toast.success("OTP đã gửi");
     } catch {
@@ -134,7 +141,7 @@ export default function HistoryPage() {
       });
 
       if (!res.success) {
-        toast.error("OTP sai hoặc hết hạn");
+        toast.error(res.message);
         return;
       }
 
@@ -189,11 +196,11 @@ export default function HistoryPage() {
 
               <button
                 onClick={sendOtp}
-                disabled={loading.otp}
+                disabled={loading.otp || !isExpired}
                 className={`shrink-0 min-w-[90px] rounded-2xl px-4 py-3 text-white whitespace-nowrap flex items-center justify-center transition ${loading.otp ? "bg-zinc-400" : "bg-black"
                   }`}
               >
-                {loading.otp ? "..." : "OTP"}
+                {loading.otp ? "Đang gửi..." : isExpired ? "Lấy OTP" : `${countdown}s`}
               </button>
             </div>
 

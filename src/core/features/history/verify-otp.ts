@@ -1,21 +1,41 @@
 import { db } from "@/core/services/firebase";
-import { collection, getDocs, query, where } from "firebase/firestore";
+import { deleteDoc, doc, getDoc } from "firebase/firestore";
 
 export async function verifyOtp(email: string, otp: string) {
-    const q = query(
-        collection(db, "otp_sessions"),
-        where("email", "==", email),
-        where("otp", "==", otp)
-    );
+    try {
+        const snap = await getDoc(doc(db, "otp_sessions", email));
 
-    const snap = await getDocs(q);
+        if (!snap.exists()) {
+            return {
+                success: false,
+                message: "Không tìm thấy OTP.",
+            };
+        }
 
-    if (snap.empty) return false;
+        const data = snap.data();
 
-    const data = snap.docs[0].data();
+        if (data.expiresAt < Date.now()) {
+            return {
+                success: false,
+                message: "OTP đã hết hạn.",
+            };
+        }
 
-    // check hết hạn
-    if (data.expiresAt < Date.now()) return false;
+        if (data.otp !== otp) {
+            return {
+                success: false,
+                message: "OTP không đúng.",
+            };
+        }
 
-    return true;
+        await deleteDoc(doc(db, "otp_sessions", email));
+
+        return {
+            success: true,
+            message: "Xác thực thành công.",
+        };
+    } catch (err) {
+        console.error("VERIFY OTP ERROR:", err);
+        throw err;
+    }
 }

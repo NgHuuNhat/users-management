@@ -17,6 +17,7 @@ import {
   SheetTitle,
 } from "@/components/ui/sheet";
 import { shortOrderId } from "@/core/shared/format-order";
+import { useOtpCountdown } from "@/core/shared/useOtpCountdown";
 
 type Step = "form" | "qr" | "success";
 
@@ -62,6 +63,10 @@ export default function Cart() {
 
   const set = (k: keyof Customer, v: string) =>
     setCustomer(p => ({ ...p, [k]: v }));
+
+  // Đếm ngược OTP
+  const [expiresAt, setExpiresAt] = useState(0);
+  const { countdown, isExpired } = useOtpCountdown(expiresAt);
 
   /* ================= SAFE VALIDATION ================= */
   const validateAll = () => {
@@ -127,10 +132,12 @@ export default function Cart() {
     setLoading(p => ({ ...p, otp: true }));
 
     try {
-      await post("/api/history", {
+      const res = await post("/api/history", {
         type: "send",
         email: customer.email,
       });
+
+      setExpiresAt(res.expiresAt);
 
       toast.success("OTP đã gửi");
     } catch {
@@ -156,7 +163,7 @@ export default function Cart() {
       });
 
       if (!otpRes.success) {
-        toast.error("OTP không đúng");
+        toast.error(otpRes.message);
         return;
       }
 
@@ -269,9 +276,10 @@ export default function Cart() {
 
                     <button
                       onClick={sendOtp}
+                      disabled={loading.otp || !isExpired}
                       className="px-4 bg-black text-white rounded-xl cursor-pointer"
                     >
-                      {loading.otp ? "..." : "Lấy OTP"}
+                      {loading.otp ? "Đang gửi..." : isExpired ? "Lấy OTP" : `${countdown}s`}
                     </button>
                   </div>
 

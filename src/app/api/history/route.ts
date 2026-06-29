@@ -6,28 +6,35 @@ export async function POST(req: Request) {
         const { type, email, otp } = await req.json();
 
         if (type === "send") {
-            await sendOtp(email);
-            return Response.json({ success: true });
+            const result = await sendOtp(email);
+            return Response.json(result);
         }
 
         if (type === "verify") {
-            const ok = await verifyOtp(email, otp);
+            const result = await verifyOtp(email, otp);
 
-            return Response.json({ success: ok }, {
-                status: ok ? 200 : 400,
+            return Response.json(result, {
+                status: result.success ? 200 : 400,
             });
         }
 
-        // Bắt trường hợp request body truyền sai type
-        return Response.json({ success: false, message: "Invalid type" }, { status: 400 });
-
+        return Response.json(
+            {
+                success: false,
+                message: "Invalid type",
+            },
+            { status: 400 }
+        );
     } catch (error: any) {
-        // BẮT LỖI TẠI ĐÂY: Nếu có lỗi gì xảy ra, trả về status 500 và log ra server để dễ debug
         console.error("API /api/history ERROR:", error);
-        return Response.json({ 
-            success: false, 
-            message: "Internal Server Error", 
-            error: error.message 
-        }, { status: 500 });
+
+        return Response.json(
+            {
+                success: false,
+                message: "Internal Server Error",
+                error: error.message,
+            },
+            { status: 500 }
+        );
     }
 }

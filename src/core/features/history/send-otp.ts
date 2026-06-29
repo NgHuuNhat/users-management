@@ -1,14 +1,17 @@
 import { db } from "@/core/services/firebase";
-import { collection, addDoc } from "firebase/firestore";
+import { doc, setDoc } from "firebase/firestore";
+
+const OTP_EXPIRE_S = 60;  // Số giây hết hạn OTP
 
 export async function sendOtp(email: string) {
   try {
     const otp = Math.floor(100000 + Math.random() * 900000).toString();
+    const expiresAt = Date.now() + OTP_EXPIRE_S * 1000;
 
-    await addDoc(collection(db, "otp_sessions"), {
+    await setDoc(doc(db, "otp_sessions", email), {
       email,
       otp,
-      expiresAt: Date.now() + 5 * 60 * 1000,
+      expiresAt,
     });
 
     const res = await fetch("https://api.emailjs.com/api/v1.0/email/send", {
@@ -18,7 +21,7 @@ export async function sendOtp(email: string) {
         service_id: process.env.EMAILJS_SERVICE_ID,
         template_id: process.env.EMAILJS_TEMPLATE_ID,
         user_id: process.env.EMAILJS_PUBLIC_KEY,
-        accessToken: process.env.EMAILJS_PRIVATE_KEY, // <--- ĐỔI TÊN Ở ĐÂY (Từ private_key thành accessToken)
+        accessToken: process.env.EMAILJS_PRIVATE_KEY,
         template_params: {
           to_email: email,
           otp_code: otp,
@@ -26,17 +29,18 @@ export async function sendOtp(email: string) {
       }),
     });
 
-    // SỬA Ở ĐÂY: EmailJS API trả về text ("OK" nếu thành công), KHÔNG phải JSON.
     const textResponse = await res.text();
-    console.log("EMAILJS RESPONSE:", textResponse);
 
     if (!res.ok) {
       throw new Error(`EmailJS Error: ${textResponse}`);
     }
 
-    return true;
-  } catch (err: any) {
+    return {
+      success: true,
+      expiresAt,
+    };
+  } catch (err) {
     console.error("SEND OTP ERROR:", err);
-    throw err; // Ném lỗi này lên cho API route xử lý
+    throw err;
   }
 }
