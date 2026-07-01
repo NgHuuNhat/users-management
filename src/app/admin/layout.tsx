@@ -1,3 +1,6 @@
+"use client";
+
+import { useState } from "react";
 import Sidebar from "@/core/features/admin/Sidebar";
 
 export default function AdminLayout({
@@ -5,12 +8,24 @@ export default function AdminLayout({
 }: {
   children: React.ReactNode;
 }) {
+  const [open, setOpen] = useState(false);
+
   return (
     <div className="bg-slate-50 text-slate-800 antialiased">
-      <Sidebar />
+      {/* Sidebar (mobile drawer + desktop fixed) */}
+      <Sidebar open={open} setOpen={setOpen} />
 
-      <div className="ml-64 flex min-h-screen flex-col overflow-x-hidden">
-        <header className="sticky top-0 z-10 flex h-16 items-center justify-between border-b border-slate-200 bg-white px-8 shadow-sm">
+      {/* MAIN */}
+      <div className="min-h-screen flex flex-col lg:pl-64">
+        {/* HEADER */}
+        <header className="sticky top-0 z-10 flex h-16 items-center justify-between border-b border-slate-200 bg-white px-4 sm:px-6 lg:px-8 shadow-sm">
+          <button
+            onClick={() => setOpen(true)}
+            className="lg:hidden rounded-md bg-slate-100 px-3 py-2 text-sm cursor-pointer"
+          >
+            ☰
+          </button>
+
           <h2 className="text-sm font-semibold uppercase tracking-wider text-slate-700">
             Hệ thống Quản trị
           </h2>
@@ -23,7 +38,8 @@ export default function AdminLayout({
           </div>
         </header>
 
-        <main className="flex-1 p-8">
+        {/* CONTENT */}
+        <main className="flex-1 p-4 sm:p-6 lg:p-8">
           {children}
         </main>
       </div>
