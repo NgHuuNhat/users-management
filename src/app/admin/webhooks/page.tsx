@@ -125,7 +125,7 @@ export default function WebhooksPage() {
         <div className="bg-white p-5 rounded-2xl border border-slate-200 shadow-sm flex items-center justify-between">
           <div>
             <p className="text-[10px] font-bold text-slate-400 uppercase tracking-wider">Tổng nhận chuyển khoản</p>
-            <h4 className="text-xl font-bold text-slate-800 mt-1">{totalRevenue.toLocaleString("vi-VN")} đ</h4>
+            <h4 className="text-xl font-bold text-emerald-600 mt-1">{totalRevenue.toLocaleString("vi-VN")} đ</h4>
           </div>
           <div className="w-10 h-10 rounded-lg bg-green-50 flex items-center justify-center text-green-600 shrink-0">
             <Wallet size={20} />
