@@ -1,7 +1,8 @@
 "use client";
-import { useEffect, useMemo, useState } from "react";
+import { useEffect, useState } from "react";
 import { collection, onSnapshot, query } from "firebase/firestore";
 import { db } from "@/core/services/firebase";
+import { Edit, Trash2, Plus, User as UserIcon } from "lucide-react";
 
 interface User {
   id: string;
@@ -14,11 +15,8 @@ interface User {
 
 export default function UsersPage() {
   const [users, setUsers] = useState<User[]>([]);
-  const [keyword, setKeyword] = useState("");
-  const [editingUser, setEditingUser] = useState<User | null>(null);
-  const [saving, setSaving] = useState(false);
-  const [formData, setFormData] = useState({ email: "", name: "", phone: "", role: "user" as const, isActive: true, password: "" });
-  const [error, setError] = useState("");
+  const [editingId, setEditingId] = useState<string | null>(null);
+  const [formData, setFormData] = useState({ name: "", email: "", phone: "", role: "user" as "user" | "admin", isActive: true, password: "" });
 
   useEffect(() => {
     const q = query(collection(db, "users"));
@@ -27,23 +25,22 @@ export default function UsersPage() {
     });
   }, []);
 
-  const filteredUsers = useMemo(() => {
-    const s = keyword.toLowerCase().trim();
-    return users.filter(u => u.name?.toLowerCase().includes(s) || u.email?.toLowerCase().includes(s) || u.phone?.includes(s));
-  }, [users, keyword]);
+  const handleEdit = (user: User) => {
+    setEditingId(user.id);
+    setFormData({ name: user.name, email: user.email, phone: user.phone || "", role: user.role || "user", isActive: user.isActive ?? true, password: "" });
+    window.scrollTo({ top: 0, behavior: 'smooth' });
+  };
 
-  const handleSaveUser = async () => {
-    if (!editingUser) return;
-    try {
-      setSaving(true);
-      const res = await fetch("/api/admin/users/update", {
-        method: "POST",
-        headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({ uid: editingUser.id, ...formData }),
-      });
-      if (!res.ok) throw new Error("Cập nhật thất bại");
-      setEditingUser(null);
-    } catch (e: any) { setError(e.message); } finally { setSaving(false); }
+  const handleSubmit = async (e: React.FormEvent) => {
+    e.preventDefault();
+    const url = editingId ? "/api/admin/users/update" : "/api/admin/users/create";
+    await fetch(url, {
+      method: "POST",
+      headers: { "Content-Type": "application/json" },
+      body: JSON.stringify({ uid: editingId, ...formData })
+    });
+    setEditingId(null);
+    setFormData({ name: "", email: "", phone: "", role: "user", isActive: true, password: "" });
   };
 
   const handleDeleteUser = async (uid: string) => {
@@ -59,62 +56,71 @@ export default function UsersPage() {
   };
 
   return (
-    <div className="space-y-6 p-4 md:p-8">
-      {/* Thống kê - Responsive grid */}
-      <div className="grid grid-cols-2 md:grid-cols-4 gap-4">
-        {[
-          { label: "Tổng", val: users.length, color: "text-slate-800" },
-          { label: "Admin", val: users.filter(u => u.role === "admin").length, color: "text-blue-600" },
-          { label: "User", val: users.filter(u => u.role !== "admin").length, color: "text-emerald-600" },
-          { label: "Active", val: users.filter(u => u.isActive).length, color: "text-orange-500" }
-        ].map((item, i) => (
-          <div key={i} className="bg-white border rounded-xl p-4 shadow-sm">
-            <p className="text-[10px] uppercase font-bold text-slate-400">{item.label}</p>
-            <h3 className={`text-2xl font-bold ${item.color}`}>{item.val}</h3>
+    <div className="flex flex-col lg:flex-row gap-6 p-4 lg:p-8 bg-slate-50 min-h-screen">
+      <div className="lg:w-[400px] shrink-0">
+        <form onSubmit={handleSubmit} className="bg-white p-6 rounded-2xl shadow-sm border border-slate-200 sticky top-8">
+          <h2 className="text-lg font-bold mb-6 flex items-center gap-2">
+            {editingId ? <Edit className="w-5 h-5 text-orange-500" /> : <Plus className="w-5 h-5 text-blue-600" />}
+            {editingId ? "Cập nhật người dùng" : "Thêm người dùng"}
+          </h2>
+
+          <div className="space-y-4">
+            <input value={formData.name} onChange={e => setFormData({ ...formData, name: e.target.value })} placeholder="Họ và tên" className="w-full px-3 py-2 border rounded-lg text-sm" required />
+            <input value={formData.email} onChange={e => setFormData({ ...formData, email: e.target.value })} placeholder="Email" className="w-full px-3 py-2 border rounded-lg text-sm" required />
+            <input type="password" value={formData.password} onChange={e => setFormData({ ...formData, password: e.target.value })} placeholder={editingId ? "Mật khẩu (để trống nếu không đổi)" : "Mật khẩu"} className="w-full px-3 py-2 border rounded-lg text-sm" required={!editingId} />
+            <input value={formData.phone} onChange={e => setFormData({ ...formData, phone: e.target.value })} placeholder="Số điện thoại" className="w-full px-3 py-2 border rounded-lg text-sm" />
+
+            <select value={formData.role} onChange={e => setFormData({ ...formData, role: e.target.value as any })} className="w-full px-3 py-2 border rounded-lg text-sm bg-white">
+              <option value="user">User</option>
+              <option value="admin">Admin</option>
+            </select>
           </div>
-        ))}
+
+          <button type="submit" className="w-full mt-6 bg-blue-600 text-white py-2 rounded-lg font-bold hover:bg-blue-700">
+            {editingId ? "Lưu thay đổi" : "Thêm người dùng"}
+          </button>
+          {editingId && <button type="button" onClick={() => { setEditingId(null); setFormData({ name: "", email: "", phone: "", role: "user", isActive: true, password: "" }); }} className="w-full mt-2 text-slate-500 text-sm">Hủy</button>}
+        </form>
       </div>
 
-      {/* Bảng danh sách - Responsive Design */}
-      <div className="bg-white p-4 md:p-6 rounded-xl shadow-sm border overflow-hidden">
-        <input 
-          placeholder="Tìm kiếm người dùng..."
-          className="w-full mb-4 px-4 py-2 border rounded-lg bg-slate-50 text-sm focus:ring-2 focus:ring-blue-500 outline-none"
-          onChange={(e) => setKeyword(e.target.value)}
-        />
-        <div className="overflow-x-auto">
-          <table className="w-full text-sm">
-            <thead className="bg-slate-50 text-slate-500">
-              <tr>
-                <th className="py-3 px-4 text-left">Người dùng</th>
-                <th className="py-3 px-4 hidden md:table-cell">Email</th>
-                <th className="py-3 px-4 hidden lg:table-cell">Trạng thái</th>
-                <th className="py-3 px-4 text-center">Thao tác</th>
-              </tr>
-            </thead>
-            <tbody className="divide-y">
-              {filteredUsers.map((user) => (
-                <tr key={user.id} className="hover:bg-slate-50">
-                  <td className="py-4 px-4 font-medium">{user.name} <br /><span className="text-xs text-slate-400 md:hidden">{user.email}</span></td>
-                  <td className="py-4 px-4 hidden md:table-cell text-slate-600">{user.email}</td>
-                  <td className="py-4 px-4 hidden lg:table-cell">
-                    <span className={`px-2 py-1 rounded-full text-[10px] ${user.isActive ? "bg-green-100 text-green-700" : "bg-red-100 text-red-700"}`}>
-                      {user.isActive ? "Hoạt động" : "Đã khóa"}
-                    </span>
-                  </td>
-                  <td className="py-4 px-4 flex justify-center gap-2">
-                    <button onClick={() => setEditingUser(user)} className="text-blue-600 hover:underline">Sửa</button>
-                    <button onClick={() => handleDeleteUser(user.id)} className="text-red-600 hover:underline">Xóa</button>
-                  </td>
+      <div className="flex-1">
+        <div className="bg-white rounded-2xl shadow-sm border border-slate-200 overflow-hidden">
+          <div className="overflow-x-auto">
+            <table className="w-full text-sm text-left">
+              <thead className="bg-slate-50 border-b text-slate-500 uppercase text-[10px] font-bold">
+                <tr>
+                  <th className="px-4 py-3">Người dùng</th>
+                  <th className="px-4 py-3 hidden md:table-cell">Email</th>
+                  <th className="px-4 py-3 text-center">Vai trò</th>
+                  <th className="px-4 py-3 text-center">Thao tác</th>
                 </tr>
-              ))}
-            </tbody>
-          </table>
+              </thead>
+              <tbody className="divide-y">
+                {users.map(u => (
+                  <tr key={u.id} className="hover:bg-slate-50">
+                    <td className="px-4 py-4 flex items-center gap-3">
+                      <div className="w-8 h-8 rounded-full bg-blue-100 flex items-center justify-center text-blue-600 font-bold text-xs"><UserIcon size={14} /></div>
+                      <div className="font-medium text-slate-800">{u.name}</div>
+                    </td>
+                    <td className="px-4 py-4 hidden md:table-cell text-slate-600">{u.email}</td>
+                    <td className="px-4 py-4 text-center">
+                      <span className={`px-2 py-1 rounded text-[10px] ${u.role === 'admin' ? 'bg-blue-50 text-blue-700' : 'bg-slate-100'}`}>
+                        {u.role}
+                      </span>
+                    </td>
+                    <td className="px-4 py-4">
+                      <div className="flex items-center justify-center gap-2">
+                        <button onClick={() => handleEdit(u)} className="p-1.5 text-blue-500 hover:bg-blue-50 rounded"><Edit size={16} /></button>
+                        <button onClick={() => handleDeleteUser(u.id)} className="p-1.5 text-red-500 hover:bg-red-50 rounded"><Trash2 size={16} /></button>
+                      </div>
+                    </td>
+                  </tr>
+                ))}
+              </tbody>
+            </table>
+          </div>
         </div>
       </div>
-      
-      {/* Modal chỉnh sửa (tương tự như code cũ của bạn) */}
-      {/* ... (Giữ nguyên logic Modal và form field) ... */}
     </div>
   );
 }
