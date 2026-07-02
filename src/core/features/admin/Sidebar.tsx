@@ -15,7 +15,7 @@ export default function Sidebar({
   const menuItems = [
     { name: "Sản phẩm (Product)", href: "/admin/products", icon: "📦" },
     { name: "Đơn hàng (Order)", href: "/admin/orders", icon: "🛒" },
-    { name: "Lịch sử Giao dịch (CK)", href: "/admin/webhooks", icon: "⚡" },
+    { name: "Lịch sử giao dịch (CK)", href: "/admin/webhooks", icon: "⚡" },
   ];
 
   return (
@@ -61,14 +61,14 @@ export default function Sidebar({
                 href={item.href}
                 onClick={() => setOpen(false)}
                 className={`flex items-center gap-3 h-11 px-4 rounded-lg text-sm transition cursor-pointer ${isActive
-                    ? "bg-blue-600 text-white"
-                    : "text-slate-400 hover:bg-slate-800 hover:text-slate-200"
+                  ? "bg-blue-600 text-white"
+                  : "text-slate-400 hover:bg-slate-800 hover:text-slate-200"
                   }`}
               >
                 <span className="text-lg leading-none flex items-center justify-center w-6">
                   {item.icon}
                 </span>
-                <span className="leading-none">{item.name}</span>
+                <span className="whitespace-pre-line leading-none">{item.name}</span>
               </Link>
             );
           })}

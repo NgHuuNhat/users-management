@@ -36,14 +36,14 @@ export default function OrderHeader({ metrics, moneyMetrics }: OrderHeaderProps)
         </div>
 
         <div className="bg-white p-4 rounded-xl border shadow-sm">
-          <p className="text-xs text-slate-400 uppercase">Tổng Nhận CK (Sepay)</p>
+          <p className="text-xs text-slate-400 uppercase">Tổng Nhận chuyển khoản</p>
           <h4 className="text-lg font-bold text-emerald-600">
             {moneyMetrics.totalSePayReceived.toLocaleString("vi-VN")} đ
           </h4>
         </div>
 
         <div className="bg-white p-4 rounded-xl border shadow-sm">
-          <p className="text-xs text-slate-400 uppercase">Tổng Nhận Tiền mặt </p>
+          <p className="text-xs text-slate-400 uppercase">Tổng Nhận Tiền mặt</p>
           <h4 className="text-lg font-bold text-purple-600">
             {moneyMetrics.totalCashReceived.toLocaleString("vi-VN")} đ
           </h4>
