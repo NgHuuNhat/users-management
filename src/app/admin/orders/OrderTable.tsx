@@ -106,12 +106,15 @@ export default function OrderTable({
                                                     <div className="flex items-center gap-2">
                                                         <div className="flex items-center gap-1">
                                                             <span className="text-[9px] font-bold text-slate-400 uppercase">Mã đơn:</span>
-                                                            <span className="font-mono font-bold text-slate-800">{formatShortId(order.id)}</span>
+                                                            {/* <span className="font-mono font-bold text-slate-800">{formatShortId(order.id)}</span> */}
+                                                            <span className="font-mono font-bold text-slate-800 bg-slate-100 px-1 rounded truncate max-w-[120px]">
+                                                                {formatShortId(order.id)}
+                                                            </span>
                                                         </div>
                                                         <div className="h-3 w-[1px] bg-slate-200"></div>
                                                         <div className="flex items-center gap-1">
                                                             <span className="text-[9px] font-bold text-slate-400 uppercase">Mã GD:</span>
-                                                            <span className="font-mono text-slate-800 bg-slate-100 px-1 rounded truncate max-w-[120px]">
+                                                            <span className="font-mono font-bold text-slate-800 bg-slate-100 px-1 rounded truncate max-w-[120px]">
                                                                 {order.bank?.transactionId || "---"}
                                                             </span>
                                                         </div>
@@ -163,7 +166,7 @@ export default function OrderTable({
                         <div className="min-[1440px]:hidden p-4 space-y-3 bg-slate-50/50">
                             {filteredOrders.map((order) => (
                                 <div key={order.id} className="bg-white p-4 rounded-xl shadow-sm border border-slate-200 grid grid-cols-1 md:grid-cols-2 gap-4">
-                                    
+
                                     {/* Cột trái Card: Định danh & Thông tin khách hàng */}
                                     <div>
                                         <div className="flex justify-between items-start gap-2 mb-2.5">
@@ -211,7 +214,7 @@ export default function OrderTable({
                                                 )}
                                             </div>
                                         </div>
-                                        
+
                                         {/* Nút Xem bản to cho iPad và Laptop dưới 1440px */}
                                         <div className="hidden md:flex justify-end mt-3">
                                             <button onClick={() => setSelectedOrder(order)} className="bg-slate-100 hover:bg-blue-50 text-blue-600 px-4 py-1.5 rounded-xl text-xs font-bold transition-colors w-full text-center">
