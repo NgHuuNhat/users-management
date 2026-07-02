@@ -121,31 +121,52 @@ export default function WebhooksPage() {
   return (
     <div className="space-y-5">
       {/* CỘT THỐNG KÊ NHANH THU NHẬP THỰC TẾ (Tự động thích ứng Grid theo màn hình) */}
-      <div className="grid grid-cols-1 sm:grid-cols-2 min-[1440px]:grid-cols-3 gap-4">
+      <div className="grid grid-cols-1 gap-4 md:grid-cols-2 xl:grid-cols-3">
+        {/* Card 1 */}
         <div className="bg-white p-5 rounded-2xl border border-slate-200 shadow-sm flex items-center justify-between">
           <div>
-            <p className="text-[10px] font-bold text-slate-400 uppercase tracking-wider">Tổng nhận chuyển khoản</p>
-            <h4 className="text-xl font-bold text-emerald-600 mt-1">{totalRevenue.toLocaleString("vi-VN")} đ</h4>
+            <p className="text-[10px] font-bold text-slate-400 uppercase tracking-wider">
+              Tổng nhận chuyển khoản
+            </p>
+            <h4 className="text-xl font-bold text-emerald-600 mt-1">
+              {totalRevenue.toLocaleString("vi-VN")} đ
+            </h4>
           </div>
           <div className="w-10 h-10 rounded-lg bg-green-50 flex items-center justify-center text-green-600 shrink-0">
             <Wallet size={20} />
           </div>
         </div>
 
+        {/* Card 2 */}
         <div className="bg-white p-5 rounded-2xl border border-slate-200 shadow-sm flex items-center justify-between">
           <div>
-            <p className="text-[10px] font-bold text-slate-400 uppercase tracking-wider">Hệ thống tự động khớp</p>
-            <h4 className="text-xl font-bold text-emerald-600 mt-1">{matchedCount} <span className="text-xs text-slate-400 font-medium">giao dịch</span></h4>
+            <p className="text-[10px] font-bold text-slate-400 uppercase tracking-wider">
+              Hệ thống tự động khớp
+            </p>
+            <h4 className="text-xl font-bold text-emerald-600 mt-1">
+              {matchedCount}{" "}
+              <span className="text-xs text-slate-400 font-medium">
+                giao dịch
+              </span>
+            </h4>
           </div>
           <div className="w-10 h-10 rounded-lg bg-emerald-50 flex items-center justify-center text-emerald-600 shrink-0">
             <CheckCircle2 size={20} />
           </div>
         </div>
 
-        <div className="bg-white p-5 rounded-2xl border border-slate-200 shadow-sm flex items-center justify-between sm:col-span-2 min-[1440px]:col-span-1">
+        {/* Card 3 */}
+        <div className="md:col-span-2 xl:col-span-1 bg-white p-5 rounded-2xl border border-slate-200 shadow-sm flex items-center justify-between">
           <div>
-            <p className="text-[10px] font-bold text-slate-400 uppercase tracking-wider">Giao dịch treo (Lỗi)</p>
-            <h4 className="text-xl font-bold text-amber-600 mt-1">{unmatchedCount} <span className="text-xs text-slate-400 font-medium">giao dịch</span></h4>
+            <p className="text-[10px] font-bold text-slate-400 uppercase tracking-wider">
+              Giao dịch treo (Lỗi)
+            </p>
+            <h4 className="text-xl font-bold text-amber-600 mt-1">
+              {unmatchedCount}{" "}
+              <span className="text-xs text-slate-400 font-medium">
+                giao dịch
+              </span>
+            </h4>
           </div>
           <div className="w-10 h-10 rounded-lg bg-amber-50 flex items-center justify-center text-amber-600 shrink-0">
             <AlertCircle size={20} />
