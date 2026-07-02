@@ -306,7 +306,7 @@ export default function Cart() {
                   <div className="text-sm text-gray-500">
                     Mã đơn hàng:{" "}
                     <span className="font-semibold text-black">
-                      ****{shortOrderId(orderId)}
+                      {shortOrderId(orderId)}
                     </span>
                   </div>
 
