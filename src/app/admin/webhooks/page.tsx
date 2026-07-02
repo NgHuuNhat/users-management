@@ -5,8 +5,9 @@ import { collection, onSnapshot, query, orderBy, doc, updateDoc } from "firebase
 import { Webhook } from "@/core/services/data-base";
 import { db } from "@/core/services/firebase";
 import { formatDate } from "@/core/shared/format-date";
-// import { db } from "@/lib/firebase";
-// import { Webhook } from "@/types";
+import { Wallet, CheckCircle2, AlertCircle, Link2, CreditCard } from "lucide-react";
+import { formatShortId } from "@/core/shared/format-short-id";
+// import { formatShortId } from "@/core/shared/format-short-id"; // Bỏ comment nếu muốn dùng
 
 export default function WebhooksPage() {
   const [webhooks, setWebhooks] = useState<(Webhook & { firestoreDocId: string })[]>([]);
@@ -23,7 +24,7 @@ export default function WebhooksPage() {
         const data = docSnap.data() as Webhook;
         list.push({
           ...data,
-          firestoreDocId: docSnap.id // Lấy ID Document của Firestore để dùng khi updateDoc
+          firestoreDocId: docSnap.id
         });
       });
       setWebhooks(list);
@@ -34,21 +35,20 @@ export default function WebhooksPage() {
     return () => unsubscribe();
   }, []);
 
-  // 2. Xử lý khớp đơn thủ công khi khách ghi sai nội dung chuyển khoản
+  // 2. Xử lý khớp đơn thủ công
   const handleManualMatch = async (firestoreDocId: string, webhookData: Webhook) => {
     const inputOrderId = prompt("Nhập chính xác Mã đơn hàng (Document ID của Order) để khớp thủ công:");
 
-    if (!inputOrderId) return; // Khách hủy hoặc không nhập gì
+    if (!inputOrderId) return;
 
     const trimmedOrderId = inputOrderId.trim();
     setProcessingId(firestoreDocId);
 
     try {
-      // BƯỚC A: Cập nhật thông tin thanh toán vào đúng Đơn hàng trong bảng 'order'
       const orderRef = doc(db, "orders", trimmedOrderId);
       await updateDoc(orderRef, {
         paymentStatus: "paid",
-        status: "processing", // Chuyển trạng thái đơn sang Đang xử lý
+        status: "processing",
         bank: {
           transferAmount: webhookData.transferAmount,
           transactionId: webhookData.transactionId,
@@ -57,7 +57,6 @@ export default function WebhooksPage() {
         }
       });
 
-      // BƯỚC B: Gắn ngược orderId vào bản ghi Webhook này để đánh dấu đã xử lý khớp đơn thành công
       const webhookRef = doc(db, "webhook", firestoreDocId);
       await updateDoc(webhookRef, {
         orderId: trimmedOrderId
@@ -72,189 +71,298 @@ export default function WebhooksPage() {
     }
   };
 
-  // 3. Tính toán nhanh các chỉ số tổng quan ở hàng trên cùng
+  // 3. Tính toán thống kê
   const totalRevenue = webhooks.reduce((sum, wh) => sum + wh.transferAmount, 0);
   const matchedCount = webhooks.filter(wh => wh.orderId).length;
   const unmatchedCount = webhooks.length - matchedCount;
 
-  // 4. Lọc danh sách hiển thị theo Tab điều hướng
+  // 4. Dữ liệu cho Filter Component
+  const filterLabels: Record<string, string> = {
+    all: "Tất cả",
+    matched: "Đã khớp",
+    unmatched: "Giao dịch treo"
+  };
+
+  const filterCounts: Record<string, number> = {
+    all: webhooks.length,
+    matched: matchedCount,
+    unmatched: unmatchedCount
+  };
+
   const filteredWebhooks = webhooks.filter((wh) => {
     if (filter === "matched") return !!wh.orderId;
     if (filter === "unmatched") return !wh.orderId;
     return true;
   });
 
+  // Component phụ render bộ lọc giống OrderTable
+  const FilterSection = ({ icon: Icon, title, options, current, setter, counts, labels }: any) => (
+    <div className="flex flex-col sm:flex-row sm:items-center gap-3">
+      <div className="flex items-center gap-2 text-slate-400 w-28 shrink-0">
+        <Icon size={16} />
+        <span className="text-[10px] font-bold uppercase tracking-wider">{title}</span>
+      </div>
+      <div className="flex flex-wrap gap-1">
+        {options.map((st: string) => (
+          <button
+            key={st}
+            onClick={() => setter(st as any)}
+            className={`px-3 py-1.5 rounded-lg text-xs font-medium transition-all ${current === st
+              ? "bg-slate-800 text-white shadow-sm"
+              : "bg-slate-100 text-slate-600 hover:bg-slate-200"
+              }`}
+          >
+            {labels[st]} <span className="opacity-70">({counts[st] || 0})</span>
+          </button>
+        ))}
+      </div>
+    </div>
+  );
+
   return (
     <div className="space-y-6">
-      {/* CỘT THỐNG KÊ NHANH THU NHẬP THỰC TẾ */}
+      {/* CỘT THỐNG KÊ NHANH THU NHẬP THỰC TẾ (Đồng bộ rounded-2xl) */}
       <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
-        <div className="bg-white p-5 rounded-xl border border-slate-200 shadow-sm flex items-center justify-between">
+        <div className="bg-white p-5 rounded-2xl border border-slate-200 shadow-sm flex items-center justify-between">
           <div>
-            <p className="text-xs font-semibold text-slate-400 uppercase tracking-wider">Tổng số tiền nhận (SePay)</p>
+            <p className="text-[10px] font-bold text-slate-400 uppercase tracking-wider">Tổng nhận (SePay)</p>
             <h4 className="text-xl font-bold text-slate-800 mt-1">{totalRevenue.toLocaleString("vi-VN")} đ</h4>
           </div>
-          <div className="w-10 h-10 rounded-lg bg-green-50 flex items-center justify-center text-green-600 text-xl font-bold">💰</div>
+          <div className="w-10 h-10 rounded-lg bg-green-50 flex items-center justify-center text-green-600">
+            <Wallet size={20} />
+          </div>
         </div>
 
-        <div className="bg-white p-5 rounded-xl border border-slate-200 shadow-sm flex items-center justify-between">
+        <div className="bg-white p-5 rounded-2xl border border-slate-200 shadow-sm flex items-center justify-between">
           <div>
-            <p className="text-xs font-semibold text-slate-400 uppercase tracking-wider">Hệ thống tự động khớp</p>
-            <h4 className="text-xl font-bold text-emerald-600 mt-1">{matchedCount} <span className="text-xs text-slate-400 font-normal">giao dịch</span></h4>
+            <p className="text-[10px] font-bold text-slate-400 uppercase tracking-wider">Hệ thống tự động khớp</p>
+            <h4 className="text-xl font-bold text-emerald-600 mt-1">{matchedCount} <span className="text-xs text-slate-400 font-medium">giao dịch</span></h4>
           </div>
-          <div className="w-10 h-10 rounded-lg bg-emerald-50 flex items-center justify-center text-emerald-600 text-lg">✅</div>
+          <div className="w-10 h-10 rounded-lg bg-emerald-50 flex items-center justify-center text-emerald-600">
+            <CheckCircle2 size={20} />
+          </div>
         </div>
 
-        <div className="bg-white p-5 rounded-xl border border-slate-200 shadow-sm flex items-center justify-between">
+        <div className="bg-white p-5 rounded-2xl border border-slate-200 shadow-sm flex items-center justify-between">
           <div>
-            <p className="text-xs font-semibold text-slate-400 uppercase tracking-wider">Giao dịch treo (Sai nội dung)</p>
-            <h4 className="text-xl font-bold text-amber-600 mt-1">{unmatchedCount} <span className="text-xs text-slate-400 font-normal">giao dịch</span></h4>
+            <p className="text-[10px] font-bold text-slate-400 uppercase tracking-wider">Giao dịch treo (Lỗi)</p>
+            <h4 className="text-xl font-bold text-amber-600 mt-1">{unmatchedCount} <span className="text-xs text-slate-400 font-medium">giao dịch</span></h4>
           </div>
-          <div className="w-10 h-10 rounded-lg bg-amber-50 flex items-center justify-center text-amber-600 text-lg">⚠️</div>
+          <div className="w-10 h-10 rounded-lg bg-amber-50 flex items-center justify-center text-amber-600">
+            <AlertCircle size={20} />
+          </div>
         </div>
       </div>
 
-      {/* DANH SÁCH CHI TIẾT LOG BIẾN ĐỘNG SỐ DƯ */}
-      <div className="bg-white rounded-xl shadow-sm border border-slate-200 overflow-hidden">
-        {/* Bộ lọc Tabs */}
-        <div className="p-6 border-b border-slate-100 flex flex-col sm:flex-row sm:items-center sm:justify-between gap-4">
-          <div>
-            <h3 className="text-base font-bold text-slate-800 uppercase tracking-tight">Nhật ký tài khoản SePay</h3>
-            <p className="text-xs text-slate-400 mt-0.5">Lịch sử nhận tiền thời gian thực từ API Webhook ngân hàng</p>
+      {/* MAIN TABLE CONTAINER */}
+      <div className="bg-white rounded-2xl shadow-sm border border-slate-200 overflow-hidden">
+        {/* Header & Filter Section */}
+        <div className="p-5 border-b border-slate-100 md:flex md:items-center md:justify-between gap-6">
+          <div className="mb-4 md:mb-0">
+            <h3 className="text-lg font-bold text-slate-800">Nhật ký SePay</h3>
+            <p className="text-sm text-slate-500">Lịch sử nhận tiền thời gian thực từ API Webhook</p>
           </div>
 
-          <div className="flex bg-slate-100 p-1 rounded-lg border border-slate-200 w-fit select-none">
-            <button
-              onClick={() => setFilter("all")}
-              className={`px-3 py-1.5 text-xs font-medium rounded-md transition-all ${filter === "all" ? "bg-white text-slate-800 shadow-sm" : "text-slate-500 hover:text-slate-800"
-                }`}
-            >
-              Tất cả ({webhooks.length})
-            </button>
-            <button
-              onClick={() => setFilter("matched")}
-              className={`px-3 py-1.5 text-xs font-medium rounded-md transition-all ${filter === "matched" ? "bg-white text-emerald-600 shadow-sm" : "text-slate-500 hover:text-emerald-600"
-                }`}
-            >
-              Hệ thống tự động khớp ({matchedCount})
-            </button>
-            <button
-              onClick={() => setFilter("unmatched")}
-              className={`px-3 py-1.5 text-xs font-medium rounded-md transition-all ${filter === "unmatched" ? "bg-white text-amber-600 shadow-sm" : "text-slate-500 hover:text-amber-600"
-                }`}
-            >
-              Giao dịch treo (Sai nội dung) ({unmatchedCount})
-            </button>
+          <div className="flex flex-col gap-3">
+            <FilterSection
+              icon={Link2}
+              title="Đối soát"
+              options={["all", "matched", "unmatched"]}
+              current={filter}
+              setter={setFilter}
+              counts={filterCounts}
+              labels={filterLabels}
+            />
           </div>
         </div>
 
-        {/* Bảng render dữ liệu */}
-        {filteredWebhooks.length === 0 ? (
-          <div className="text-center py-16 text-slate-400 text-sm">
-            Không có dữ liệu giao dịch nào khớp với bộ lọc hiện tại.
-          </div>
-        ) : (
-          <div className="overflow-x-auto">
-            <table className="w-full text-left text-sm border-collapse">
-              <thead>
-                <tr className="border-b border-slate-200 text-slate-400 font-medium bg-slate-50/50 text-xs uppercase tracking-wider">
-                  <th className="py-3 px-4">Thời gian</th>
-                  <th className="py-3 px-4">Mã GD Sepay</th>
-                  <th className="py-3 px-4">Tài khoản nhận</th>
-                  <th className="py-3 px-4 text-right">Số tiền nhận (Sepay)</th>
-                  <th className="py-3 px-4">Nội dung tin nhắn</th>
-                  <th className="py-3 px-4">Trạng thái xử lý</th>
-                </tr>
-              </thead>
-              <tbody className="divide-y divide-slate-100 text-slate-600">
+        {/* Main Content */}
+        <div className="overflow-hidden">
+          {filteredWebhooks.length === 0 ? (
+            <div className="text-center py-20 text-slate-400">Không có giao dịch nào khớp với bộ lọc.</div>
+          ) : (
+            <>
+              {/* Table View (Hidden on mobile) */}
+              <div className="hidden md:block overflow-x-auto">
+                <table className="w-full text-left text-sm">
+                  <thead className="bg-slate-50 text-slate-400 uppercase text-[10px] tracking-wider">
+                    <tr>
+                      <th className="py-4 px-6">Thông tin GD</th>
+                      <th className="py-4 px-6">Nguồn tiền</th>
+                      <th className="py-4 px-6 text-right">Số tiền</th>
+                      <th className="py-4 px-6">Nội dung chuyển khoản</th>
+                      <th className="py-4 px-6 text-center">Trạng thái</th>
+                    </tr>
+                  </thead>
+                  <tbody className="divide-y divide-slate-100">
+                    {filteredWebhooks.map((wh) => (
+                      <tr key={wh.firestoreDocId} className="hover:bg-slate-50/50 transition-colors">
+
+                        {/* Cột 1: Thông tin GD */}
+                        <td className="py-4 px-6">
+                          <div className="flex flex-col gap-1.5">
+                            <div className="flex items-center gap-1">
+                              <span className="text-[9px] font-bold text-slate-400 uppercase">Mã GD:</span>
+                              <span className="font-mono text-xs font-bold text-slate-800 bg-slate-100 px-1 rounded truncate max-w-[120px]">
+                                {wh.transactionId}
+                              </span>
+                            </div>
+                            <div className="text-[12px] text-slate-400 font-medium">
+                              {formatDate(wh.transactionDate)}
+                            </div>
+                          </div>
+                        </td>
+
+                        {/* Cột 2: Nguồn tiền */}
+                        <td className="py-4 px-6">
+                          <div className="flex flex-col gap-1">
+                            <div className="flex items-center gap-1 text-xs">
+                              <CreditCard size={14} className="text-slate-400" />
+                              <span className="font-mono font-bold text-slate-600">{wh.accountNumber}</span>
+                            </div>
+                            <div className="w-fit px-1.5 py-0.5 rounded text-[9px] font-bold tracking-wide uppercase bg-blue-50 text-blue-600 border border-blue-100">
+                              {wh.gateway}
+                            </div>
+                          </div>
+                        </td>
+
+                        {/* Cột 3: Số tiền */}
+                        <td className="py-4 px-6 text-right font-bold text-emerald-600">
+                          +{wh.transferAmount.toLocaleString("vi-VN")} đ
+                        </td>
+
+                        {/* Cột 4: Nội dung */}
+                        <td className="py-4 px-6">
+                          <div className="text-slate-700 bg-slate-50 p-2 border border-slate-200 rounded-lg text-[11px] font-mono leading-relaxed max-w-[220px] break-words">
+                            {wh.content}
+                          </div>
+                        </td>
+
+                        {/* Cột 5: Trạng thái */}
+                        <td className="py-4 px-6 text-center">
+                          <div className="flex flex-col gap-1 items-center">
+                            {wh.orderId ? (
+                              <>
+                                <span className="inline-flex items-center gap-1 px-2 py-0.5 rounded text-[10px] font-bold bg-emerald-50 text-emerald-700 border border-emerald-100">
+                                  <CheckCircle2 size={12} /> Đã khớp đơn
+                                </span>
+
+                                <div>
+                                  <div className="flex items-center justify-between">
+                                    <span className="text-[10px] font-bold text-slate-400 uppercase">Liên kết tới mã đơn:</span>
+                                    <span className="font-mono text-xs text-slate-700 font-bold bg-slate-100 px-1.5 py-0.5 rounded truncate">{formatShortId(wh.orderId)}</span>
+                                  </div>
+                                  <div className="flex items-center justify-between">
+                                    <span className="text-[10px] font-bold text-slate-400 uppercase">Mã GD:</span>
+                                    <span className="font-mono text-xs text-slate-700 font-bold bg-slate-100 px-1.5 py-0.5 rounded truncate">{wh.transactionId}</span>
+                                  </div>
+                                </div>
+
+                              </>
+                            ) : (
+                              <>
+                                <span className="inline-flex items-center gap-1 px-2 py-0.5 rounded text-[10px] font-bold bg-orange-50 text-orange-700 border border-orange-100 mb-1">
+                                  <AlertCircle size={12} /> Giao dịch treo
+                                </span>
+                                <button
+                                  disabled={processingId === wh.firestoreDocId}
+                                  onClick={() => handleManualMatch(wh.firestoreDocId, wh)}
+                                  className={`px-2.5 py-1 rounded-lg text-[10px] font-bold transition-all ${processingId === wh.firestoreDocId
+                                    ? "bg-slate-100 text-slate-400 cursor-wait"
+                                    : "bg-blue-50 text-blue-600 hover:bg-blue-100 border border-blue-100"
+                                    }`}
+                                >
+                                  {processingId === wh.firestoreDocId ? "Đang xử lý..." : "Khớp thủ công"}
+                                </button>
+                              </>
+                            )}
+                          </div>
+                        </td>
+                      </tr>
+                    ))}
+                  </tbody>
+                </table>
+              </div>
+
+              {/* Card View (Visible on mobile only - Đồng bộ OrderTable) */}
+              <div className="md:hidden p-4 space-y-3 bg-slate-50">
                 {filteredWebhooks.map((wh) => (
-                  <tr key={wh.firestoreDocId} className="hover:bg-slate-50/40 transition-colors">
-
-                    {/* Cột 1: Ngày giờ giao dịch */}
-                    <td className="py-4 px-4 align-top">
-                      <div className="font-mono text-xs text-slate-800 font-semibold select-all">
-                        {/* {wh.transactionDate} */}
-                        {/* {'abc'} */}
-                        {formatDate(wh.transactionDate)}
-                      </div>
-                    </td>
-
-                    {/* Cột 1.2: Mã giao dịch sepay */}
-                    <td className="py-4 px-4 align-top">
-                      <div className="font-mono text-xs text-slate-800 font-semibold select-all">
-                        {wh.transactionId}
-                      </div>
-                      <div>
-                        <div className="text-[10px] font-mono text-slate-400 block max-w-[200px] truncate">
-                          Mã đơn: {wh.orderId}
+                  <div key={wh.firestoreDocId} className="bg-white p-4 rounded-xl shadow-sm border border-slate-200">
+                    {/* Header Card: Mã GD & Trạng thái */}
+                    <div className="flex justify-between items-start mb-3">
+                      <div className="flex flex-col gap-1 overflow-hidden">
+                        <div className="flex items-center gap-1.5">
+                          <span className="text-[9px] font-bold text-slate-400 uppercase">Mã GD:</span>
+                          <span className="font-mono text-xs font-bold text-slate-800 bg-slate-100 px-1 rounded truncate">
+                            {wh.transactionId}
+                          </span>
                         </div>
-                        <div className="text-[10px] font-mono text-slate-400 block max-w-[200px] truncate">
-                          Mã GD Sepay: {wh.transactionId}
+                        <div className="text-[10px] text-slate-400 font-medium">
+                          {formatDate(wh.transactionDate)}
                         </div>
                       </div>
-                    </td>
 
-                    {/* Cột 2: Số tài khoản thụ hưởng */}
-                    <td className="font-semibold py-4 px-4 align-top text-xs sm:text-sm font-mono text-slate-500 pt-4.5">
-                      {wh.accountNumber}
-                      <div className="mt-1.5 w-fit px-2 py-0.5 rounded text-[10px] font-bold tracking-wide uppercase bg-blue-50 text-blue-600 border border-blue-100">
-                        {wh.gateway}
+                      {/* Trạng thái ở góc phải */}
+                      {wh.orderId ? (
+                        <span className="inline-flex items-center gap-1 px-1.5 py-0.5 rounded text-[9px] font-bold bg-emerald-50 text-emerald-700 border border-emerald-100">
+                          <CheckCircle2 size={10} /> Đã khớp
+                        </span>
+                      ) : (
+                        <span className="inline-flex items-center gap-1 px-1.5 py-0.5 rounded text-[9px] font-bold bg-orange-50 text-orange-700 border border-orange-100">
+                          <AlertCircle size={10} /> Treo
+                        </span>
+                      )}
+                    </div>
+
+                    {/* Body Card: Thông tin thanh toán */}
+                    <div className="mb-3 space-y-1.5 border-t pt-3">
+                      <div className="flex items-center justify-between text-xs">
+                        <div className="flex items-center gap-1 text-slate-500">
+                          <CreditCard size={14} />
+                          <span className="font-mono">{wh.accountNumber}</span>
+                          <span className="text-[8px] uppercase font-bold bg-blue-50 text-blue-600 px-1 rounded ml-1 border border-blue-100">{wh.gateway}</span>
+                        </div>
+                        <span className="font-bold text-emerald-600">+{wh.transferAmount.toLocaleString("vi-VN")} đ</span>
                       </div>
-                    </td>
 
-                    {/* Cột 3: Số tiền cộng vào tài khoản */}
-                    <td className="py-4 px-4 text-right align-top font-bold text-emerald-600 text-xs sm:text-sm">
-                      +{wh.transferAmount.toLocaleString("vi-VN")} đ
-                    </td>
-
-                    {/* Cột 4: Nội dung tin nhắn chuyển khoản của khách hàng */}
-                    <td className="py-4 px-4 align-top max-w-xs break-words">
-                      <div className="text-slate-700 font-medium bg-slate-50 p-2 border border-slate-200 rounded-lg text-xs leading-relaxed font-mono">
+                      {/* Nội dung */}
+                      <div className="mt-2 text-slate-600 bg-slate-50 p-2 border border-slate-100 rounded text-[11px] font-mono break-words">
                         {wh.content}
                       </div>
-                      {/* <div className="text-[10px] text-slate-400 mt-1 font-mono">
-                        Mã GD SePay: {wh.transactionId}
-                      </div> */}
-                    </td>
+                    </div>
 
-                    {/* Cột 5: Trạng thái và nút xử lý đối soát */}
-                    <td className="py-4 px-4 align-top">
+                    {/* Footer Card: Hành động */}
+                    <div className="flex flex-col gap-2 pt-3 border-t border-slate-100">
                       {wh.orderId ? (
-                        <div className="space-y-0">
-                          <span className="inline-flex items-center gap-1 px-2.5 py-1 rounded-full text-xs font-semibold bg-emerald-50 text-emerald-700 border border-emerald-200">
-                            <span className="w-1.5 h-1.5 rounded-full bg-emerald-500"></span>
-                            Đã liên kết đơn
-                          </span>
-                          <div className="text-[10px] font-mono text-slate-400 block max-w-[200px] truncate">
-                            Mã đơn: {wh.orderId}
+                        <div>
+                          <div className="flex items-center justify-between">
+                            <span className="text-[10px] font-bold text-slate-400 uppercase">Liên kết tới mã đơn:</span>
+                            <span className="font-mono text-xs text-slate-700 font-bold bg-slate-100 px-1.5 py-0.5 rounded truncate">{formatShortId(wh.orderId)}</span>
                           </div>
-                          <div className="text-[10px] font-mono text-slate-400 block max-w-[200px] truncate">
-                            Mã GD Sepay: {wh.transactionId}
+                          <div className="flex items-center justify-between">
+                            <span className="text-[10px] font-bold text-slate-400 uppercase">Mã GD:</span>
+                            <span className="font-mono text-xs text-slate-700 font-bold bg-slate-100 px-1.5 py-0.5 rounded truncate">{wh.transactionId}</span>
                           </div>
                         </div>
                       ) : (
-                        <div className="space-y-2">
-                          <span className="inline-flex items-center gap-1 px-2.5 py-1 rounded-full text-xs font-semibold bg-amber-50 text-amber-700 border border-amber-200">
-                            <span className="w-1.5 h-1.5 rounded-full bg-amber-500"></span>
-                            Chưa khớp / Treo
-                          </span>
-                          <button
-                            disabled={processingId === wh.firestoreDocId}
-                            onClick={() => handleManualMatch(wh.firestoreDocId, wh)}
-                            className={`block text-xs font-semibold text-blue-600 hover:text-blue-800 hover:underline transition-all ${processingId === wh.firestoreDocId ? "opacity-40 cursor-wait" : ""
-                              }`}
-                          >
-                            {processingId === wh.firestoreDocId ? "⌛ Đang liên kết..." : "🛠️ Khớp đơn thủ công"}
-                          </button>
-                        </div>
+                        <button
+                          disabled={processingId === wh.firestoreDocId}
+                          onClick={() => handleManualMatch(wh.firestoreDocId, wh)}
+                          className={`w-full py-2 rounded-lg text-xs font-bold transition-all ${processingId === wh.firestoreDocId
+                            ? "bg-slate-100 text-slate-400 cursor-wait"
+                            : "bg-blue-50 text-blue-600 border border-blue-100 active:bg-blue-100"
+                            }`}
+                        >
+                          {processingId === wh.firestoreDocId ? "Đang xử lý..." : "Khớp thủ công"}
+                        </button>
                       )}
-                    </td>
-
-                  </tr>
+                    </div>
+                  </div>
                 ))}
-              </tbody>
-            </table>
-          </div>
-        )}
+              </div>
+            </>
+          )}
+        </div>
       </div>
     </div>
   );

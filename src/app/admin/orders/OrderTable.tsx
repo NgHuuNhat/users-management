@@ -94,7 +94,7 @@ export default function OrderTable({
                             <table className="w-full text-left text-sm">
                                 <thead className="bg-slate-50 text-slate-400 uppercase text-[10px] tracking-wider">
                                     <tr>
-                                        <th className="py-4 px-6">Thông tin</th>
+                                        <th className="py-4 px-6">Thông tin đơn hàng</th>
                                         <th className="py-4 px-6">Khách hàng</th>
                                         <th className="py-4 px-6 text-right">Số tiền hoá đơn</th>
                                         <th className="py-4 px-6 text-center">Trạng thái</th>
