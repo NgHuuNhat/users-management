@@ -28,7 +28,7 @@ export default function Footer() {
               Thông tin liên hệ:
             </p>
 
-            <a
+            {/* <a
               href="mailto:nhat200901@gmail.com"
               aria-label="Email"
               className="cursor-pointer rounded-full border border-zinc-200 p-3 text-zinc-600 transition hover:border-black hover:text-black"
@@ -55,7 +55,7 @@ export default function Footer() {
               className="cursor-pointer rounded-full border border-zinc-200 p-3 text-zinc-600 transition hover:border-black hover:text-black"
             >
               <FaInstagram size={18} />
-            </a>
+            </a> */}
 
             <a
               href="https://zalo.me/0985627061"
