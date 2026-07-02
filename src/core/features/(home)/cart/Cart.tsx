@@ -191,6 +191,20 @@ export default function Cart() {
     toast.success("Thanh toán thành công");
   };
 
+  const handleCancelOrder = async () => {
+    if (!orderId) return;
+    try {
+      const res = await post("/api/checkout/cancel", { orderId });
+      if (res.success) {
+        setStep(null);
+        closeCart()
+        toast.success("Đơn hàng đã được hủy, số lượng kho đã được hoàn lại.");
+      }
+    } catch {
+      toast.error("Không thể hủy đơn hàng tự động.");
+    }
+  };
+
   return (
     <Sheet open={isOpen} onOpenChange={(v) => !v && closeCart()}>
       <SheetContent side="right" className="w-full sm:w-[420px] flex flex-col p-0 [&>button]:cursor-pointer [&>button]:bg-gray-100">
@@ -319,6 +333,15 @@ export default function Cart() {
                   >
                     Thanh toán khi nhận hàng
                   </button>
+                  <button
+                    onClick={() => {
+                      handleCancelOrder()
+                    }}
+                    className="w-full py-3 bg-red-500 text-white rounded-full cursor-pointer"
+                  >
+                    Huỷ đơn
+                  </button>
+
                 </div>
               )}
 

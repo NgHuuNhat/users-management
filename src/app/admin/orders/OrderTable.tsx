@@ -103,7 +103,7 @@ export default function OrderTable({
                                         <tr key={order.id} className="hover:bg-slate-50/50 transition-colors">
                                             <td className="py-4 px-6 align-top whitespace-nowrap">
                                                 <div className="flex flex-col gap-1.5">
-                                                    <div className="flex items-center gap-2">
+                                                    <div className="flex flex-col gap-2">
                                                         <div className="flex items-center gap-1">
                                                             <span className="text-[9px] font-bold text-slate-400 uppercase">Mã đơn:</span>
                                                             {/* <span className="font-mono font-bold text-slate-800">{formatShortId(order.id)}</span> */}
@@ -111,7 +111,7 @@ export default function OrderTable({
                                                                 {formatShortId(order.id)}
                                                             </span>
                                                         </div>
-                                                        <div className="h-3 w-[1px] bg-slate-200"></div>
+                                                        {/* <div className="h-3 w-[1px] bg-slate-200"></div> */}
                                                         <div className="flex items-center gap-1">
                                                             <span className="text-[9px] font-bold text-slate-400 uppercase">Mã GD:</span>
                                                             <span className="font-mono font-bold text-slate-800 bg-slate-100 px-1 rounded truncate max-w-[120px]">
