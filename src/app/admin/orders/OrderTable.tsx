@@ -208,7 +208,7 @@ export default function OrderTable({
                                                 {/* Hàng 1: Mã đơn */}
                                                 <div className="flex items-center gap-1.5">
                                                     <span className="text-[9px] font-bold text-slate-400 uppercase w-10">Mã đơn:</span>
-                                                    <span className="font-mono text-xs font-bold text-slate-800 truncate">{order.id}</span>
+                                                    <span className="font-mono text-xs font-bold text-slate-800 truncate">{formatShortId(order.id)}</span>
                                                 </div>
 
                                                 {/* Hàng 2: Mã GD */}
