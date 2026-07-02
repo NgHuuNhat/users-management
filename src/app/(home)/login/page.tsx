@@ -3,23 +3,43 @@
 import { useState } from 'react';
 import { signInWithEmailAndPassword } from 'firebase/auth';
 import { useRouter } from 'next/navigation';
-import { auth } from '@/core/services/firebase';
+import { auth, db } from '@/core/services/firebase';
+import { doc, getDoc } from 'firebase/firestore';
+import { toast } from 'sonner'; // Import toast
+import Link from 'next/link';
 
 export default function Login() {
     const [email, setEmail] = useState('');
     const [password, setPassword] = useState('');
-    const [error, setError] = useState('');
+    const [loading, setLoading] = useState(false); // Thêm state loading
     const router = useRouter();
 
     const handleLogin = async (e: React.FormEvent<HTMLFormElement>) => {
         e.preventDefault();
-        setError('');
+        setLoading(true);
 
         try {
-            await signInWithEmailAndPassword(auth, email, password);
-            router.push('/');
+            const userCredential = await signInWithEmailAndPassword(auth, email, password);
+            const user = userCredential.user;
+
+            const userDoc = await getDoc(doc(db, "users", user.uid));
+            const role = userDoc.data()?.role;
+
+            await fetch('/api/auth/set-role', {
+                method: 'POST',
+                body: JSON.stringify({ role })
+            });
+
+            // Toast thành công
+            toast.success("Đăng nhập thành công!");
+
+            router.push(role === 'admin' ? '/admin/orders' : '/');
+            router.refresh();
         } catch {
-            setError('Email hoặc mật khẩu không chính xác!');
+            // Toast lỗi
+            toast.error("Email hoặc mật khẩu không chính xác!");
+        } finally {
+            setLoading(false);
         }
     };
 
@@ -28,18 +48,28 @@ export default function Login() {
             <form onSubmit={handleLogin} className="w-full max-w-sm space-y-4">
                 <div className="mb-8 text-center">
                     <h1 className="text-3xl font-bold text-zinc-900">Đăng nhập</h1>
-                    <p className="mt-2 text-sm text-zinc-500">Tiếp tục sử dụng hệ thống</p>
                 </div>
 
                 <input type="email" placeholder="Email" value={email} onChange={(e) => setEmail(e.target.value)} required className="w-full rounded-2xl bg-white px-5 py-4 outline-none shadow-sm" />
-
                 <input type="password" placeholder="Mật khẩu" value={password} onChange={(e) => setPassword(e.target.value)} required className="w-full rounded-2xl bg-white px-5 py-4 outline-none shadow-sm" />
 
-                <p className="min-h-5 text-sm text-red-500">{error ? error : ""}</p>
-
-                <button type="submit" className="cursor-pointer w-full rounded-2xl bg-black py-4 font-medium text-white transition hover:opacity-90">
-                    Đăng nhập
+                <button
+                    type="submit"
+                    disabled={loading} // Vô hiệu hóa khi đang xử lý
+                    className="cursor-pointer w-full rounded-2xl bg-black py-4 font-medium text-white transition hover:opacity-90 disabled:opacity-50"
+                >
+                    {loading ? "Đang xử lý..." : "Đăng nhập"}
                 </button>
+
+                <Link href='/register'>
+                    <button
+                        type="submit"
+                        // disabled={loading} // Vô hiệu hóa khi đang xử lý
+                        className="cursor-pointer w-full rounded-2xl bg-gray-400 py-4 font-medium text-white transition hover:opacity-90 disabled:opacity-50"
+                    >
+                        {/* {loading ? "Đang xử lý..." : "Đăng nhập"} */} Đến trang đăng ký
+                    </button>
+                </Link>
             </form>
         </main>
     );

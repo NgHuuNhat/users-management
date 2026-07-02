@@ -1,7 +1,9 @@
 "use client";
 
+import { auth } from "@/core/services/firebase";
+import { signOut } from "firebase/auth";
 import Link from "next/link";
-import { usePathname } from "next/navigation";
+import { usePathname, useRouter } from "next/navigation";
 
 export default function Sidebar({
   open,
@@ -11,12 +13,31 @@ export default function Sidebar({
   setOpen: (v: boolean) => void;
 }) {
   const pathname = usePathname();
+  const router = useRouter();
 
   const menuItems = [
+    { name: "Tài khoản (Users)", href: "/admin/users", icon: "😀" },
     { name: "Sản phẩm (Product)", href: "/admin/products", icon: "📦" },
     { name: "Đơn hàng (Order)", href: "/admin/orders", icon: "🛒" },
     { name: "Lịch sử giao dịch (CK)", href: "/admin/webhooks", icon: "⚡" },
+    { name: "go to Home Page", href: "/", icon: "🏠" },
   ];
+
+  const handleLogout = async () => {
+    try {
+      // 1. Đăng xuất Firebase
+      await signOut(auth);
+
+      // 2. Gọi API để xóa cookie
+      await fetch('/api/auth/logout', { method: 'POST' });
+
+      // 3. Chuyển hướng về trang chủ hoặc login
+      router.push('/login');
+      router.refresh(); // Refresh để middleware cập nhật lại trạng thái
+    } catch (error) {
+      console.error("Lỗi khi đăng xuất:", error);
+    }
+  };
 
   return (
     <>
@@ -52,8 +73,33 @@ export default function Sidebar({
 
         {/* NAV */}
         <nav className="flex-1 overflow-y-auto px-3 py-4 space-y-1">
-          {menuItems.map((item) => {
+          {/* {menuItems.map((item) => {
             const isActive = pathname.startsWith(item.href);
+
+            return (
+              <Link
+                key={item.name}
+                href={item.href}
+                onClick={() => setOpen(false)}
+                className={`flex items-center gap-3 h-11 px-4 rounded-lg text-sm transition cursor-pointer ${isActive
+                  ? "bg-blue-600 text-white"
+                  : "text-slate-400 hover:bg-slate-800 hover:text-slate-200"
+                  }`}
+              >
+                <span className="text-lg leading-none flex items-center justify-center w-6">
+                  {item.icon}
+                </span>
+                <span className="whitespace-pre-line leading-none">{item.name}</span>
+              </Link>
+            );
+          })} */}
+          {menuItems.map((item) => {
+            // Thay đổi logic: 
+            // 1. Nếu href là "/", thì chỉ active khi pathname chính xác là "/"
+            // 2. Nếu href khác "/", thì dùng startsWith như cũ
+            const isActive = item.href === "/"
+              ? pathname === "/"
+              : pathname.startsWith(item.href);
 
             return (
               <Link
@@ -77,7 +123,7 @@ export default function Sidebar({
         {/* FOOTER */}
         <div className="mt-auto border-t border-slate-800 p-4 shrink-0">
           <Link href="/">
-            <button className="w-full h-10 flex items-center justify-center cursor-pointer rounded-lg bg-slate-800 text-xs font-medium text-slate-300 hover:bg-red-600 hover:text-white transition">
+            <button onClick={handleLogout} className="w-full h-10 flex items-center justify-center cursor-pointer rounded-lg bg-slate-800 text-xs font-medium text-slate-300 hover:bg-red-600 hover:text-white transition">
               Đăng xuất
             </button>
           </Link>

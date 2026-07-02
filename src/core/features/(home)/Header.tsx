@@ -2,7 +2,7 @@
 
 import Link from "next/link";
 import { usePathname } from "next/navigation";
-import { useRef, useState } from "react";
+import { useEffect, useRef, useState } from "react";
 import { Menu, ShoppingCart, Search } from "lucide-react";
 
 import { useCartStore } from "./cart/cart-store";
@@ -11,13 +11,16 @@ import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Badge } from "@/components/ui/badge";
 import { Sheet, SheetContent, SheetTrigger } from "@/components/ui/sheet";
+import { onAuthStateChanged, signOut, User } from "firebase/auth";
+import { auth, db } from "@/core/services/firebase";
+import { doc, getDoc } from "firebase/firestore";
 
 const menus = [
   { href: "/", label: "Home" },
   { href: "/history", label: "History" },
+  // { href: "/admin/orders", label: "Admin page" },
   // { href: "/login", label: "Login" },
   // { href: "/register", label: "Register" },
-  { href: "/admin/orders", label: "Admin" },
 ];
 
 export default function Header() {
@@ -26,6 +29,35 @@ export default function Header() {
 
   const [query, setQuery] = useState("");
   const mobileSearchRef = useRef<HTMLInputElement>(null);
+
+  const [user, setUser] = useState<User | null>(null);
+  const [role, setRole] = useState<"admin" | "user" | null>(null);
+
+  useEffect(() => {
+    const unsubscribe = onAuthStateChanged(auth, async (currentUser) => {
+      setUser(currentUser);
+
+      if (!currentUser) {
+        setRole(null);
+        return;
+      }
+
+      const snap = await getDoc(doc(db, "users", currentUser.uid));
+      setRole(snap.data()?.role ?? "user");
+    });
+
+    return unsubscribe;
+  }, []);
+
+  const handleLogout = async () => {
+    await signOut(auth);
+
+    await fetch("/api/auth/logout", {
+      method: "POST",
+    });
+
+    window.location.href = "/login";
+  };
 
   return (
     <header className="sticky top-0 z-50 border-b bg-white/80 backdrop-blur">
@@ -60,6 +92,57 @@ export default function Header() {
                     </Link>
                   );
                 })}
+                {user ? (
+                  <>
+                    {/* <Link
+                      href="/admin/orders"
+                      className={`rounded-full px-3 py-2 text-sm transition ${pathname === "/admin/orders"
+                        ? "bg-black text-white"
+                        : "text-zinc-600 hover:bg-zinc-100"
+                        }`}
+                    >
+                      to Admin Page
+                    </Link> */}
+                    {role === "admin" && (
+                      <Link
+                        href="/admin/orders"
+                        className="rounded-full px-3 py-2 text-sm text-zinc-600 hover:bg-zinc-100"
+                      >
+                        go to Admin Page
+                      </Link>
+                    )}
+                    <Button
+                      variant="ghost"
+                      onClick={handleLogout}
+                      className="rounded-full cursor-pointer"
+                    >
+                      Logout
+                    </Button>
+                  </>
+                ) : (
+                  <>
+
+                    <Link
+                      href="/login"
+                      className={`rounded-full px-3 py-2 text-sm transition ${pathname === "/login"
+                        ? "bg-black text-white"
+                        : "text-zinc-600 hover:bg-zinc-100"
+                        }`}
+                    >
+                      Login
+                    </Link>
+
+                    {/* <Link
+                      href="/register"
+                      className={`rounded-full px-3 py-2 text-sm transition ${pathname === "/register"
+                        ? "bg-black text-white"
+                        : "text-zinc-600 hover:bg-zinc-100"
+                        }`}
+                    >
+                      Register
+                    </Link> */}
+                  </>
+                )}
               </div>
             </SheetContent>
           </Sheet>
@@ -69,6 +152,24 @@ export default function Header() {
           </Link>
 
           {/* DESKTOP MENU */}
+          {/* <nav className="hidden md:flex items-center gap-2 ml-6">
+            {menus.map((m) => {
+              const active = pathname === m.href;
+
+              return (
+                <Link
+                  key={m.href}
+                  href={m.href}
+                  className={`rounded-full px-3 py-2 text-sm transition ${active
+                    ? "bg-black text-white"
+                    : "text-zinc-600 hover:bg-zinc-100"
+                    }`}
+                >
+                  {m.label}
+                </Link>
+              );
+            })}
+          </nav> */}
           <nav className="hidden md:flex items-center gap-2 ml-6">
             {menus.map((m) => {
               const active = pathname === m.href;
@@ -86,6 +187,48 @@ export default function Header() {
                 </Link>
               );
             })}
+
+            {user ? (
+              <>
+                {/* <Link
+                  href="/admin/orders"
+                  className="rounded-full px-3 py-2 text-sm text-zinc-600 hover:bg-zinc-100"
+                >
+                  to Admin Page
+                </Link> */}
+                {role === "admin" && (
+                  <Link
+                    href="/admin/orders"
+                    className="rounded-full px-3 py-2 text-sm text-zinc-600 hover:bg-zinc-100"
+                  >
+                    go to Admin Page
+                  </Link>
+                )}
+                <Button
+                  variant="ghost"
+                  onClick={handleLogout}
+                  className="rounded-full cursor-pointer"
+                >
+                  Logout
+                </Button>
+              </>
+            ) : (
+              <>
+                <Link
+                  href="/login"
+                  className="rounded-full px-3 py-2 text-sm text-zinc-600 hover:bg-zinc-100"
+                >
+                  Login
+                </Link>
+
+                {/* <Link
+                  href="/register"
+                  className="rounded-full px-3 py-2 text-sm text-zinc-600 hover:bg-zinc-100"
+                >
+                  Register
+                </Link> */}
+              </>
+            )}
           </nav>
         </div>
 
