@@ -23,16 +23,13 @@ export default function OrderTable({
     statusCount, statusLabel, paymentStatusCount, paymentLabel, setSelectedOrder
 }: OrderTableProps) {
 
-    // Component phụ để render bộ lọc gọn gàng hơn
+    // Bộ lọc: Dưới 1440px xếp dọc gọn gàng, từ 1440px trở lên thì dàn hàng ngang song song với tiêu đề
     const FilterSection = ({ icon: Icon, title, options, current, setter, counts, labels }: any) => (
-        <div className="flex flex-col sm:flex-row sm:items-center gap-3">
-            {/* Title với Icon */}
-            <div className="flex items-center gap-2 text-slate-400 w-28 shrink-0">
-                <Icon size={16} />
+        <div className="flex flex-col sm:flex-row sm:items-center gap-2 w-full min-[1440px]:w-auto">
+            <div className="flex items-center gap-1.5 text-slate-400 sm:w-24 shrink-0">
+                <Icon size={14} />
                 <span className="text-[10px] font-bold uppercase tracking-wider">{title}</span>
             </div>
-
-            {/* Nút lọc */}
             <div className="flex flex-wrap gap-1">
                 {options.map((st: string) => (
                     <button
@@ -43,7 +40,7 @@ export default function OrderTable({
                             : "bg-slate-100 text-slate-600 hover:bg-slate-200"
                             }`}
                     >
-                        {labels[st]} <span className="opacity-70">({counts[st] || 0})</span>
+                        {labels[st]} <span className="opacity-70 text-[11px]">({counts[st] || 0})</span>
                     </button>
                 ))}
             </div>
@@ -51,17 +48,15 @@ export default function OrderTable({
     );
 
     return (
-        <div className="bg-white rounded-2xl shadow-sm border border-slate-200 overflow-hidden">
-            {/* Header & Filter Section */}
-            <div className="p-5 border-b border-slate-100 md:flex md:items-center md:justify-between gap-6">
-                {/* Phần Tiêu đề - Bên trái */}
-                <div className="mb-4 md:mb-0">
+        <div className="bg-white rounded-2xl shadow-sm border border-slate-200 overflow-hidden w-full">
+            {/* Header: < 1440px xếp chồng khối dọc, >= 1440px dàn hàng ngang */}
+            <div className="p-5 border-b border-slate-100 flex flex-col min-[1440px]:flex-row min-[1440px]:items-center min-[1440px]:justify-between gap-5">
+                <div>
                     <h3 className="text-lg font-bold text-slate-800">Quản lý đơn hàng</h3>
                     <p className="text-sm text-slate-500">Tổng quan tình trạng vận chuyển và thanh toán</p>
                 </div>
 
-                {/* Phần Bộ lọc - Bên phải */}
-                <div className="flex flex-col gap-3">
+                <div className="flex flex-col gap-3 w-full min-[1440px]:w-auto">
                     <FilterSection
                         icon={Truck}
                         title="Vận chuyển"
@@ -89,103 +84,69 @@ export default function OrderTable({
                     <div className="text-center py-20 text-slate-400">Không có đơn hàng nào khớp với bộ lọc.</div>
                 ) : (
                     <>
-                        {/* Table View (Hidden on mobile) */}
-                        <div className="hidden md:block overflow-x-auto">
-                            <table className="w-full text-left text-sm">
+                        {/* ============================================================== */}
+                        {/* TABLE VIEW: CHỈ BẬT KHI MÀN HÌNH TỪ 1440PX TRỞ LÊN            */}
+                        {/* ============================================================== */}
+                        <div className="hidden min-[1440px]:block overflow-x-auto">
+                            <table className="w-full text-left text-sm table-fixed">
                                 <thead className="bg-slate-50 text-slate-400 uppercase text-[10px] tracking-wider">
                                     <tr>
-                                        <th className="py-4 px-6">Thông tin đơn hàng</th>
-                                        <th className="py-4 px-6">Khách hàng</th>
-                                        <th className="py-4 px-6 text-right">Số tiền hoá đơn</th>
-                                        <th className="py-4 px-6 text-center">Trạng thái</th>
-                                        <th className="py-4 px-6 text-right"></th>
+                                        <th className="py-4 px-6 w-[22%]">Thông tin đơn hàng</th>
+                                        <th className="py-4 px-6 w-[33%]">Khách hàng</th>
+                                        <th className="py-4 px-6 text-right w-[18%]">Số tiền hoá đơn</th>
+                                        <th className="py-4 px-6 text-center w-[18%]">Trạng thái</th>
+                                        <th className="py-4 px-6 text-right w-[9%]"></th>
                                     </tr>
                                 </thead>
                                 <tbody className="divide-y divide-slate-100">
                                     {filteredOrders.map((order) => (
                                         <tr key={order.id} className="hover:bg-slate-50/50 transition-colors">
-                                            <td className="py-4 px-6">
+                                            <td className="py-4 px-6 align-top whitespace-nowrap">
                                                 <div className="flex flex-col gap-1.5">
-                                                    {/* Khối định danh: Mã đơn & Mã giao dịch */}
                                                     <div className="flex items-center gap-2">
                                                         <div className="flex items-center gap-1">
                                                             <span className="text-[9px] font-bold text-slate-400 uppercase">Mã đơn:</span>
-                                                            <span className="font-mono text-m font-bold text-slate-800">{formatShortId(order.id)}</span>
+                                                            <span className="font-mono font-bold text-slate-800">{formatShortId(order.id)}</span>
                                                         </div>
-
-                                                        <div className="h-3 w-[1px] bg-slate-200"></div> {/* Thanh kẻ đứng phân cách */}
-
+                                                        <div className="h-3 w-[1px] bg-slate-200"></div>
                                                         <div className="flex items-center gap-1">
                                                             <span className="text-[9px] font-bold text-slate-400 uppercase">Mã GD:</span>
-                                                            <span className="font-mono text-m font-bold text-slate-800 bg-slate-100 px-1 rounded">
+                                                            <span className="font-mono text-slate-800 bg-slate-100 px-1 rounded truncate max-w-[120px]">
                                                                 {order.bank?.transactionId || "---"}
                                                             </span>
                                                         </div>
                                                     </div>
-
-                                                    {/* Ngày tạo - Riêng ở hàng dưới */}
                                                     <div className="text-[12px] text-slate-400 font-medium">
                                                         {formatDate(order.createdAt)}
                                                     </div>
                                                 </div>
                                             </td>
-                                            <td className="py-4 px-6 min-w-[200px]">
-                                                <div className="flex flex-col gap-1">
-                                                    {/* Tên khách hàng */}
-                                                    {/* <div className="font-bold text-slate-800 text-sm">{order.customer?.name || "Khách ẩn danh"}</div> */}
-                                                    {/* Tên khách hàng */}
-                                                    <div className="flex items-center gap-1 text-xs">
-                                                        <span className="text-slate-400">Tên:</span>
-                                                        <span className="text-slate-600 font-bold">{order.customer?.name || "Khách ẩn danh"}</span>
-                                                    </div>
-
-                                                    {/* Số điện thoại */}
-                                                    <div className="flex items-center gap-1 text-xs">
-                                                        <span className="text-slate-400">SĐT:</span>
-                                                        <span className="text-slate-600 font-bold">{order.customer?.phone || "N/A"}</span>
-                                                    </div>
-
-                                                    {/* Email */}
-                                                    {order.customer?.email && (
-                                                        <div className="flex items-center gap-1 text-xs">
-                                                            <span className="text-slate-400">Mail:</span>
-                                                            <span className="text-slate-600">{order.customer.email}</span>
-                                                        </div>
-                                                    )}
-
-                                                    {/* Địa chỉ - Dùng line-clamp để giới hạn 1 dòng nếu quá dài */}
-                                                    <div className="flex items-start gap-1 text-xs">
-                                                        <span className="text-slate-400">Địa chỉ:</span>
-                                                        <span className="text-slate-500">{order.customer?.address || "Chưa cập nhật"}</span>
-                                                    </div>
+                                            <td className="py-4 px-6">
+                                                <div className="flex flex-col gap-1 text-xs">
+                                                    <div className="flex items-center gap-1"><span className="text-slate-400">Tên:</span><span className="text-slate-600 font-bold truncate">{order.customer?.name || "Khách ẩn danh"}</span></div>
+                                                    <div className="flex items-center gap-1"><span className="text-slate-400">SĐT:</span><span className="text-slate-600 font-bold">{order.customer?.phone || "N/A"}</span></div>
+                                                    {order.customer?.email && <div className="flex items-center gap-1"><span className="text-slate-400">Mail:</span><span className="text-slate-600 truncate">{order.customer.email}</span></div>}
+                                                    <div className="flex items-start gap-1"><span className="text-slate-400">Địa chỉ:</span><span className="text-slate-500 line-clamp-1">{order.customer?.address || "Chưa cập nhật"}</span></div>
                                                 </div>
                                             </td>
-                                            <td className="py-4 px-6 text-right font-bold text-blue-600">
+                                            <td className="py-4 px-6 text-right font-bold text-blue-600 whitespace-nowrap">
                                                 {order.amount?.toLocaleString("vi-VN")} đ
                                             </td>
-                                            <td className="py-4 px-6 text-center">
+                                            <td className="py-4 px-6 text-center whitespace-nowrap">
                                                 <div className="flex flex-col gap-1 items-center">
                                                     <div className="flex gap-1">
-                                                        {/* Badge Vận chuyển */}
                                                         {getStatusBadge(order.status)}
-
-                                                        {/* Badge Thanh toán */}
                                                         {getPaymentBadge(order.paymentStatus)}
                                                     </div>
-
-                                                    {/* Số tiền nợ (Luôn hiện nếu trạng thái thanh toán là 'pending') */}
                                                     {order.paymentStatus === 'pending' && (
-                                                        <div className={`text-[10px] font-bold px-1.5 py-0.5 rounded border mt-1 whitespace-nowrap ${(order.debtAmount ?? 0) > 0
-                                                            ? "text-orange-600 bg-orange-50 border-orange-100"
-                                                            : "text-slate-400 bg-slate-50 border-slate-100"
-                                                            }`}>
+                                                        <div className={`text-[10px] font-bold px-1.5 py-0.5 rounded border mt-1 whitespace-nowrap ${(order.debtAmount ?? 0) > 0 ? "text-orange-600 bg-orange-50 border-orange-100" : "text-slate-400 bg-slate-50"}`}>
                                                             Đang nợ: {(order.debtAmount ?? 0).toLocaleString("vi-VN")}đ
                                                         </div>
                                                     )}
                                                 </div>
                                             </td>
-                                            <td className="py-4 px-6 text-right">
-                                                <button onClick={() => setSelectedOrder(order)} className="p-1 px-2 cursor-pointer bg-gray-100 rounded-2xl text-blue-600 font-semibold text-xs hover:text-blue-800">
+                                            <td className="py-4 px-6 text-right whitespace-nowrap">
+                                                <button onClick={() => setSelectedOrder(order)} className="p-1 px-2.5 cursor-pointer bg-gray-100 rounded-2xl text-blue-600 font-semibold text-xs hover:bg-blue-600 hover:text-white transition-all">
                                                     Xem →
                                                 </button>
                                             </td>
@@ -195,89 +156,73 @@ export default function OrderTable({
                             </table>
                         </div>
 
-                        {/* Card View (Visible on mobile only) */}
-                        <div className="md:hidden p-4 space-y-3 bg-slate-50">
+                        {/* ============================================================== */}
+                        {/* CARD VIEW (MOBILE): TỰ ĐỘNG HIỆN KHI MÀN HÌNH < 1440PX         */}
+                        {/* Bao gồm: Mobile, iPad dọc/ngang, Laptop 13" nhỏ (1280px, 1366px)... */}
+                        {/* ============================================================== */}
+                        <div className="min-[1440px]:hidden p-4 space-y-3 bg-slate-50/50">
                             {filteredOrders.map((order) => (
-                                <div key={order.id} className="bg-white p-4 rounded-xl shadow-sm border border-slate-200">
-
-                                    {/* Header: Mã đơn, Mã GD & Ngày */}
-                                    <div className="flex flex-col gap-2 mb-3">
-                                        <div className="flex justify-between items-center gap-2">
-                                            {/* Nhóm Mã */}
-                                            <div className="flex flex-col gap-1 overflow-hidden">
-                                                {/* Hàng 1: Mã đơn */}
-                                                <div className="flex items-center gap-1.5">
-                                                    <span className="text-[9px] font-bold text-slate-400 uppercase w-10">Mã đơn:</span>
-                                                    <span className="font-mono text-xs font-bold text-slate-800 truncate">{formatShortId(order.id)}</span>
-                                                </div>
-
-                                                {/* Hàng 2: Mã GD */}
-                                                <div className="flex items-center gap-1.5">
-                                                    <span className="text-[9px] font-bold text-slate-400 uppercase w-10">Mã GD:</span>
-                                                    <span className="font-mono text-xs text-slate-600 bg-slate-100 px-1 rounded truncate">
+                                <div key={order.id} className="bg-white p-4 rounded-xl shadow-sm border border-slate-200 grid grid-cols-1 md:grid-cols-2 gap-4">
+                                    
+                                    {/* Cột trái Card: Định danh & Thông tin khách hàng */}
+                                    <div>
+                                        <div className="flex justify-between items-start gap-2 mb-2.5">
+                                            <div className="flex flex-col gap-0.5">
+                                                <div className="flex flex-wrap items-center gap-1.5">
+                                                    <span className="text-[9px] font-bold text-slate-400 uppercase">Mã:</span>
+                                                    <span className="font-mono text-xs font-bold text-slate-800">{formatShortId(order.id)}</span>
+                                                    <span className="font-mono text-[11px] text-slate-500 bg-slate-100 px-1 rounded truncate max-w-[100px]">
                                                         {order.bank?.transactionId || "---"}
                                                     </span>
                                                 </div>
+                                                <div className="text-[10px] text-slate-400 font-medium">
+                                                    {formatDate(order.createdAt)}
+                                                </div>
                                             </div>
-
-                                            {/* Nút Xem */}
-                                            <button
-                                                onClick={() => setSelectedOrder(order)}
-                                                className="bg-blue-50 text-blue-600 px-3 py-1 rounded-lg text-xs font-bold shrink-0"
-                                            >
+                                            {/* Nút Xem cho mobile nhỏ */}
+                                            <button onClick={() => setSelectedOrder(order)} className="md:hidden bg-blue-50 text-blue-600 px-2.5 py-1 rounded-lg text-xs font-bold shrink-0">
                                                 Xem →
                                             </button>
                                         </div>
-                                        <div className="text-[10px] text-slate-400 font-medium">
-                                            {formatDate(order.createdAt)}
+
+                                        <div className="space-y-0.5 text-[11px] md:text-xs">
+                                            <div className="flex items-center text-slate-600"><span className="w-12 text-slate-400 shrink-0">Tên:</span><span className="font-bold truncate">{order.customer?.name || "Khách ẩn danh"}</span></div>
+                                            <div className="flex items-center text-slate-600"><span className="w-12 text-slate-400 shrink-0">SĐT:</span><span className="font-bold">{order.customer?.phone || "Chưa cập nhật"}</span></div>
+                                            <div className="flex items-start text-slate-600"><span className="w-12 text-slate-400 shrink-0">ĐC:</span><span className="text-slate-500 line-clamp-2">{order.customer?.address || "Chưa cập nhật"}</span></div>
                                         </div>
                                     </div>
 
-                                    {/* Thông tin khách hàng */}
-                                    <div className="mb-4 space-y-1 border-t pt-3">
-                                        <div className="grid grid-cols-1 gap-0.5 text-[11px]">
-                                            <div className="flex items-center text-slate-600">
-                                                <span className="w-12 text-slate-400">Tên:</span>
-                                                <span className="font-bold">{order.customer?.name || "Khách ẩn danh"}</span>
+                                    {/* Cột phải Card: Tiền nong & Trạng thái (Tự động kích hoạt khi lên cỡ iPad/Laptop nhỏ) */}
+                                    <div className="flex flex-col justify-between items-stretch md:border-l md:pl-4 md:pt-0 pt-3 border-t md:border-t-0 border-slate-100">
+                                        <div className="flex md:flex-col justify-between items-center md:items-end gap-2">
+                                            <div className="text-right">
+                                                <span className="text-[10px] block text-slate-400 font-medium">Tổng số tiền</span>
+                                                <span className="font-bold text-base text-slate-900">{order.amount?.toLocaleString("vi-VN")} đ</span>
                                             </div>
-                                            <div className="flex items-center text-slate-600">
-                                                <span className="w-12 text-slate-400">SĐT:</span>
-                                                <span className="font-bold">{order.customer?.phone || "Chưa cập nhật"}</span>
+                                            <div className="flex flex-col items-end gap-1">
+                                                <div className="flex gap-1">
+                                                    {getStatusBadge(order.status)}
+                                                    {getPaymentBadge(order.paymentStatus)}
+                                                </div>
+                                                {order.paymentStatus === 'pending' && (
+                                                    <div className={`text-[9px] font-bold px-1.5 py-0.5 rounded border ${(order.debtAmount ?? 0) > 0 ? "text-orange-600 bg-orange-50 border-orange-100" : "text-slate-400 bg-slate-50"}`}>
+                                                        Nợ: {(order.debtAmount ?? 0).toLocaleString("vi-VN")} đ
+                                                    </div>
+                                                )}
                                             </div>
-                                            <div className="flex items-start text-slate-600">
-                                                <span className="w-12 text-slate-400">Email:</span>
-                                                <span className="text-slate-500">{order.customer?.email || "Chưa cập nhật"}</span>
-                                            </div>
-                                            <div className="flex items-start text-slate-600">
-                                                <span className="w-12 text-slate-400">ĐC:</span>
-                                                <span className="text-slate-500">{order.customer?.address || "Chưa cập nhật"}</span>
-                                            </div>
+                                        </div>
+                                        
+                                        {/* Nút Xem bản to cho iPad và Laptop dưới 1440px */}
+                                        <div className="hidden md:flex justify-end mt-3">
+                                            <button onClick={() => setSelectedOrder(order)} className="bg-slate-100 hover:bg-blue-50 text-blue-600 px-4 py-1.5 rounded-xl text-xs font-bold transition-colors w-full text-center">
+                                                Chi tiết đơn hàng →
+                                            </button>
                                         </div>
                                     </div>
 
-                                    {/* Footer: Số tiền & Trạng thái */}
-                                    <div className="flex flex-col gap-2 pt-3 border-t border-slate-100">
-                                        <div className="flex justify-between items-center">
-                                            <span className="font-bold text-slate-900">{order.amount?.toLocaleString("vi-VN")} đ</span>
-                                            <div className="flex gap-1">
-                                                {getStatusBadge(order.status)}
-                                                {getPaymentBadge(order.paymentStatus)}
-                                            </div>
-                                        </div>
-                                        {/* Số tiền nợ */}
-                                        {order.paymentStatus === 'pending' && (
-                                            <div className={`text-[10px] font-bold px-2 py-1 rounded border text-center ${(order.debtAmount ?? 0) > 0
-                                                ? "text-orange-600 bg-orange-50 border-orange-100"
-                                                : "text-slate-400 bg-slate-50 border-slate-100"
-                                                }`}>
-                                                Đang nợ: {(order.debtAmount ?? 0).toLocaleString("vi-VN")} đ
-                                            </div>
-                                        )}
-                                    </div>
                                 </div>
                             ))}
                         </div>
-
                     </>
                 )}
             </div>
