@@ -198,7 +198,7 @@ export default function WebhooksPage() {
                   <tbody className="divide-y divide-slate-100">
                     {filteredWebhooks.map((wh) => (
                       <tr key={wh.firestoreDocId} className="hover:bg-slate-50/50 transition-colors">
-                        
+
                         {/* Cột 1: Thông tin GD */}
                         <td className="py-4 px-6 align-top">
                           <div className="flex flex-col gap-1.5">
@@ -250,6 +250,9 @@ export default function WebhooksPage() {
                                 <div className="text-[11px] text-slate-500 bg-slate-50 border border-slate-100 p-1.5 rounded-lg w-full max-w-[180px] space-y-0.5 text-left">
                                   <div className="truncate"><span className="text-[9px] font-bold text-slate-400 uppercase">Mã đơn:</span> <span className="font-mono font-bold text-slate-700">{formatShortId(wh.orderId)}</span></div>
                                 </div>
+                                <div className="text-[11px] text-slate-500 bg-slate-50 border border-slate-100 p-1.5 rounded-lg w-full max-w-[180px] space-y-0.5 text-left">
+                                  <div className="truncate"><span className="text-[9px] font-bold text-slate-400 uppercase">Mã GD:</span> <span className="font-mono font-bold text-slate-700">{wh.transactionId}</span></div>
+                                </div>
                               </div>
                             ) : (
                               <div className="flex flex-col gap-1.5 items-center">
@@ -282,7 +285,7 @@ export default function WebhooksPage() {
               <div className="min-[1440px]:hidden p-4 space-y-3 bg-slate-50/50">
                 {filteredWebhooks.map((wh) => (
                   <div key={wh.firestoreDocId} className="bg-white p-4 rounded-xl shadow-sm border border-slate-200 grid grid-cols-1 md:grid-cols-2 gap-4">
-                    
+
                     {/* Khối trái: Chi tiết giao dịch ngân hàng */}
                     <div>
                       <div className="flex justify-between items-start gap-2 mb-2">
@@ -333,7 +336,7 @@ export default function WebhooksPage() {
                           <span className="text-[10px] block text-slate-400 font-medium">Số tiền nhận</span>
                           <span className="font-bold text-base text-emerald-600">+{wh.transferAmount.toLocaleString("vi-VN")} đ</span>
                         </div>
-                        
+
                         {/* Nhóm Badge trên bản iPad/Tablet/Laptop < 1440px */}
                         <div className="hidden md:block">
                           {wh.orderId ? (
