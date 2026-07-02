@@ -1,20 +1,47 @@
+// export interface Product {
+//     id: string                      // PK
+//     name: string                    // Tên sản phẩm
+//     price: number | null            // Giá bán
+//     image: string                   // Ảnh sản phẩm
+//     description: string             // Mô tả sản phẩm
+//     [key: string]: any              // Thuộc tính mở rộng
+//     createdAt: string               // Thời điểm tạo sản phẩm
+// }
+
+// export interface OrderItem {
+//     productId: Product['id']        // FK -> Product.id
+//     quantity: number                // Số lượng mua
+//     name: Product['name']           // Snapshot tên sản phẩm tại thời điểm mua
+//     price: Product['price']         // Snapshot giá tại thời điểm mua
+//     image: Product['image']         // Snapshot ảnh tại thời điểm mua
+//     [key: string]: any              // Thuộc tính mở rộng
+// }
+
+export interface Category {
+    id: string;
+    name: string;
+    image: string;
+}
+
 export interface Product {
-    id: string                      // PK
-    name: string                    // Tên sản phẩm
-    price: number | null            // Giá bán
-    image: string                   // Ảnh sản phẩm
-    description: string             // Mô tả sản phẩm
-    [key: string]: any              // Thuộc tính mở rộng
-    createdAt: string               // Thời điểm tạo sản phẩm
+    id: string;                       // Mã định danh duy nhất của sản phẩm
+    categoryId: string;               // Thuộc danh mục nào
+    name: string;                     // Tên sản phẩm (Ví dụ: "Áo Polo Classic - Đen - Size L")
+    price: number;                    // Giá bán thực tế
+    quantity: number;                 // Số lượng tồn kho
+    image: string;                    // Ảnh đại diện chính
+    description: string;              // Mô tả sản phẩm
+    attributes: Record<string, string>; // Object chứa các Key-Value tự do (VD: { "Màu sắc": "Đen", "Size": "L", "Chất liệu": "Cotton" })
+    createdAt: string;                // Thời điểm tạo
 }
 
 export interface OrderItem {
-    productId: Product['id']        // FK -> Product.id
-    quantity: number                // Số lượng mua
-    name: Product['name']           // Snapshot tên sản phẩm tại thời điểm mua
-    price: Product['price']         // Snapshot giá tại thời điểm mua
-    image: Product['image']         // Snapshot ảnh tại thời điểm mua
-    [key: string]: any              // Thuộc tính mở rộng
+    productId: Product['id'];         // FK -> ID của sản phẩm đại diện
+    quantity: number;                 // Số lượng mua của biến thể này
+    name: Product['name'];            // Snapshot - Tên sản phẩm đại diện tại thời điểm mua
+    price: Product['price'];
+    image: Product['image'];          // Snapshot - Ảnh đại diện sản phẩm lúc mua
+    propertiesDetail?: string;        // Snapshot - Lưu nhanh cấu hình lúc mua (Ví dụ: "Màu: Vàng, Size: XL") để xem lại hóa đơn
 }
 
 export interface Order {
