@@ -15,7 +15,7 @@ export default function Sidebar({
   const menuItems = [
     { name: "Sản phẩm (Product)", href: "/admin/products", icon: "📦" },
     { name: "Đơn hàng (Order)", href: "/admin/orders", icon: "🛒" },
-    { name: "Lịch sử Webhook", href: "/admin/webhooks", icon: "⚡" },
+    { name: "Lịch sử Giao dịch (CK)", href: "/admin/webhooks", icon: "⚡" },
   ];
 
   return (
@@ -23,9 +23,8 @@ export default function Sidebar({
       {/* Overlay mobile */}
       <div
         onClick={() => setOpen(false)}
-        className={`fixed inset-0 z-40 bg-black/40 lg:hidden transition-opacity ${
-          open ? "opacity-100" : "pointer-events-none opacity-0"
-        }`}
+        className={`fixed inset-0 z-40 bg-black/40 lg:hidden transition-opacity ${open ? "opacity-100" : "pointer-events-none opacity-0"
+          }`}
       />
 
       <aside
@@ -40,7 +39,7 @@ export default function Sidebar({
         {/* HEADER */}
         <div className="h-16 flex items-center justify-between px-4 border-b border-slate-800 shrink-0">
           <h1 className="text-sm font-bold tracking-wider text-blue-400 leading-none flex items-center">
-            STORE ADMIN
+            MY STORE ADMIN
           </h1>
 
           <button
@@ -61,11 +60,10 @@ export default function Sidebar({
                 key={item.name}
                 href={item.href}
                 onClick={() => setOpen(false)}
-                className={`flex items-center gap-3 h-11 px-4 rounded-lg text-sm transition cursor-pointer ${
-                  isActive
+                className={`flex items-center gap-3 h-11 px-4 rounded-lg text-sm transition cursor-pointer ${isActive
                     ? "bg-blue-600 text-white"
                     : "text-slate-400 hover:bg-slate-800 hover:text-slate-200"
-                }`}
+                  }`}
               >
                 <span className="text-lg leading-none flex items-center justify-center w-6">
                   {item.icon}
