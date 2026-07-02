@@ -141,11 +141,29 @@ export default function OrderTable({
                                                         {getStatusBadge(order.status)}
                                                         {getPaymentBadge(order.paymentStatus)}
                                                     </div>
-                                                    {order.paymentStatus === 'pending' && (
+
+                                                    {/* {order.paymentStatus === 'pending' && (
                                                         <div className={`text-[10px] font-bold px-1.5 py-0.5 rounded border mt-1 whitespace-nowrap ${(order.debtAmount ?? 0) > 0 ? "text-orange-600 bg-orange-50 border-orange-100" : "text-slate-400 bg-slate-50"}`}>
                                                             Đang nợ: {(order.debtAmount ?? 0).toLocaleString("vi-VN")}đ
                                                         </div>
-                                                    )}
+                                                    )} */}
+                                                    {order.paymentStatus === 'pending' && (() => {
+                                                        // Nếu có debtAmount thì dùng debtAmount, ngược lại mặc định là toàn bộ tiền hóa đơn
+                                                        const hasRealDebt = (order.debtAmount ?? 0) > 0;
+                                                        const displayDebt = hasRealDebt ? (order.debtAmount ?? 0) : (order.amount ?? 0);
+
+                                                        // Định nghĩa màu sắc: Giao dịch COD bình thường màu xanh/chàm, nợ thực sự màu cam
+                                                        const badgeClass = hasRealDebt
+                                                            ? "text-orange-600 bg-orange-50 border-orange-100" // Cảnh báo nợ
+                                                            : "text-indigo-600 bg-indigo-50 border-indigo-100"; // COD thông thường
+
+                                                        return (
+                                                            <div className={`text-[10px] font-bold px-1.5 py-0.5 rounded border mt-1 whitespace-nowrap ${badgeClass}`}>
+                                                                {hasRealDebt ? "Khách nợ: " : "Thu hộ COD: "} {displayDebt.toLocaleString("vi-VN")}đ
+                                                            </div>
+                                                        );
+                                                    })()}
+
                                                 </div>
                                             </td>
                                             <td className="py-4 px-6 text-right whitespace-nowrap">
