@@ -334,9 +334,7 @@ export default function Cart() {
                     Thanh toán khi nhận hàng
                   </button>
                   <button
-                    onClick={() => {
-                      handleCancelOrder()
-                    }}
+                    onClick={() => {handleCancelOrder}}
                     className="w-full py-3 bg-red-500 text-white rounded-full cursor-pointer"
                   >
                     Huỷ đơn

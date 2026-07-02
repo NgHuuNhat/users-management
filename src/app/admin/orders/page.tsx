@@ -7,7 +7,8 @@ import { db } from "@/core/services/firebase";
 
 import OrderHeader from "./OrderHeader";
 import OrderTable from "./OrderTable";
-import OrderModal from "./OrderModal"; 
+import OrderModal from "./OrderModal";
+import { toast } from "sonner";
 
 export default function OrdersPage() {
   const COLLECTION_NAME = "orders";
@@ -47,6 +48,42 @@ export default function OrdersPage() {
     }
   };
 
+  // 2.1 Hàm huỷ đơn khôi phục số lượng quantity product
+  const post = (url: string, body: any) =>
+    fetch(url, {
+      method: "POST",
+      headers: { "Content-Type": "application/json" },
+      body: JSON.stringify(body),
+    }).then(r => r.json());
+
+  const handleUpdateQuantityProduct = async (
+    orderId: string,
+    oldStatus: Order["status"],
+    newStatus: Order["status"]
+  ) => {
+    let type: "increase" | "decrease" | null = null;
+    if (oldStatus !== "cancelled" && newStatus === "cancelled") {
+      type = "increase";
+    } else if (oldStatus === "cancelled" && newStatus !== "cancelled") {
+      type = "decrease";
+    }
+    // Không cần cập nhật kho
+    if (!type) return { success: true };
+    try {
+      const res = await post("/api/admin/orders/updateQuantityProduct", {
+        orderId,
+        type,
+      });
+      if (!res.success) {
+        toast.error(res.message);
+      }
+      return res;
+    } catch {
+      toast.error("Không thể cập nhật tồn kho.");
+      return { success: false };
+    }
+  };
+
   // 3. Tính toán Data
   const metrics = {
     total: orders.length,
@@ -75,7 +112,7 @@ export default function OrdersPage() {
     completed: orders.filter(o => o.status === "completed").length,
     cancelled: orders.filter(o => o.status === "cancelled").length,
   };
-  
+
   const paymentStatusCount = {
     all: orders.length,
     pending: orders.filter(o => o.paymentStatus === "pending").length,
@@ -90,8 +127,8 @@ export default function OrdersPage() {
   return (
     <div className="space-y-6">
       <OrderHeader metrics={metrics} moneyMetrics={moneyMetrics} />
-      
-      <OrderTable 
+
+      <OrderTable
         filteredOrders={filteredOrders}
         filterStatus={filterStatus}
         setFilterStatus={setFilterStatus}
@@ -105,7 +142,7 @@ export default function OrdersPage() {
       />
 
       {selectedOrder && (
-        <OrderModal 
+        <OrderModal
           selectedOrder={selectedOrder}
           setSelectedOrder={setSelectedOrder}
           updatingId={updatingId}
@@ -114,6 +151,7 @@ export default function OrdersPage() {
           setShowDebtInput={setShowDebtInput}
           debtInput={debtInput}
           setDebtInput={setDebtInput}
+          handleUpdateQuantityProduct={handleUpdateQuantityProduct}
         />
       )}
     </div>

@@ -10,6 +10,7 @@ import {
   DialogDescription,
 } from "@/components/ui/dialog";
 import { formatShortId } from "@/core/shared/format-short-id";
+import { toast } from "sonner";
 
 interface OrderModalProps {
   selectedOrder: Order | null;
@@ -20,6 +21,7 @@ interface OrderModalProps {
   setShowDebtInput: (show: boolean) => void;
   debtInput: number | null;
   setDebtInput: (val: number | null) => void;
+  handleUpdateQuantityProduct: any;
 }
 
 export default function OrderModal({
@@ -31,6 +33,7 @@ export default function OrderModal({
   setShowDebtInput,
   debtInput,
   setDebtInput,
+  handleUpdateQuantityProduct,
 }: OrderModalProps) {
 
   if (!selectedOrder) return null;
@@ -170,10 +173,30 @@ export default function OrderModal({
                   <button
                     key={item.value}
                     disabled={updatingId !== null}
-                    onClick={() => {
-                      if (item.value === "cancelled" && !confirm("Bạn có chắc muốn huỷ đơn hàng này?")) return;
-                      handleUpdateStatus(selectedOrder.id, { status: item.value });
+                    // onClick={() => {
+                    //   if (item.value === "cancelled" && !confirm("Bạn có chắc muốn huỷ đơn hàng này?")) return;
+                    //   handleUpdateStatus(selectedOrder.id, { status: item.value });
+                    // }}
+
+                    onClick={async () => {
+                      const newStatus = item.value;
+                      if (
+                        newStatus === "cancelled" &&
+                        !confirm("Bạn có chắc muốn huỷ đơn hàng này?")
+                      ) {
+                        return;
+                      }
+                      const res: any = await handleUpdateQuantityProduct(
+                        selectedOrder.id,
+                        selectedOrder.status,
+                        newStatus
+                      );
+                      if (!res.success) return;
+                      await handleUpdateStatus(selectedOrder.id, {
+                        status: newStatus,
+                      });
                     }}
+
                     className={`cursor-pointer w-full py-2 md:py-1.5 text-[11px] md:text-xs font-medium rounded-lg md:rounded-md transition-all duration-150 ${selectedOrder.status === item.value
                       ? "bg-white text-neutral-900 shadow-sm font-semibold"
                       : "text-neutral-500 hover:text-neutral-800"
