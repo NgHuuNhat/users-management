@@ -10,7 +10,7 @@ import { useCartStore } from "./cart/cart-store";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Badge } from "@/components/ui/badge";
-import { Sheet, SheetContent, SheetTrigger } from "@/components/ui/sheet";
+import { Sheet, SheetClose, SheetContent, SheetTrigger } from "@/components/ui/sheet";
 import { onAuthStateChanged, signOut, User } from "firebase/auth";
 import { auth, db } from "@/core/services/firebase";
 import { doc, getDoc } from "firebase/firestore";
@@ -80,67 +80,56 @@ export default function Header() {
                   const active = pathname === m.href;
 
                   return (
-                    <Link
-                      key={m.href}
-                      href={m.href}
-                      className={`rounded-lg px-3 py-2 text-sm transition ${active
-                        ? "bg-black text-white"
-                        : "text-zinc-700 hover:bg-zinc-100"
-                        }`}
-                    >
-                      {m.label}
-                    </Link>
+                    <SheetClose asChild key={m.href}>
+                      <Link
+                        key={m.href}
+                        href={m.href}
+                        className={`rounded-lg px-3 py-2 text-sm transition ${active
+                          ? "bg-black text-white"
+                          : "text-zinc-700 hover:bg-zinc-100"
+                          }`}
+                      >
+                        {m.label}
+                      </Link>
+                    </SheetClose>
                   );
                 })}
                 {user ? (
                   <>
-                    {/* <Link
-                      href="/admin/orders"
-                      className={`rounded-full px-3 py-2 text-sm transition ${pathname === "/admin/orders"
-                        ? "bg-black text-white"
-                        : "text-zinc-600 hover:bg-zinc-100"
-                        }`}
-                    >
-                      to Admin Page
-                    </Link> */}
                     {role === "admin" && (
-                      <Link
-                        href="/admin/orders"
-                        className="rounded-full px-3 py-2 text-sm text-zinc-600 hover:bg-zinc-100"
-                      >
-                        go to Admin Page
-                      </Link>
+                      <SheetClose asChild>
+                        <Link
+                          href="/admin/orders"
+                          className="rounded-full px-3 py-2 text-sm text-zinc-600 hover:bg-zinc-100"
+                        >
+                          go to Admin Page
+                        </Link>
+                      </SheetClose>
+
                     )}
-                    <Button
-                      variant="ghost"
-                      onClick={handleLogout}
-                      className="rounded-full cursor-pointer"
-                    >
-                      Logout
-                    </Button>
+                    <SheetClose asChild>
+                      <Button
+                        variant="ghost"
+                        onClick={handleLogout}
+                        className="rounded-full cursor-pointer"
+                      >
+                        Logout
+                      </Button>
+                    </SheetClose>
                   </>
                 ) : (
                   <>
-
-                    <Link
-                      href="/login"
-                      className={`rounded-full px-3 py-2 text-sm transition ${pathname === "/login"
-                        ? "bg-black text-white"
-                        : "text-zinc-600 hover:bg-zinc-100"
-                        }`}
-                    >
-                      Login
-                    </Link>
-
-                    {/* <Link
-                      href="/register"
-                      className={`rounded-full px-3 py-2 text-sm transition ${pathname === "/register"
-                        ? "bg-black text-white"
-                        : "text-zinc-600 hover:bg-zinc-100"
-                        }`}
-                    >
-                      Register
-                    </Link> */}
+                    <SheetClose asChild>
+                      <Link
+                        href="/login"
+                        className={`rounded-full px-3 py-2 text-sm transition ${pathname === "/login"
+                          ? "bg-black text-white"
+                          : "text-zinc-600 hover:bg-zinc-100"
+                          }`}
+                      >
+                        Login
+                      </Link>
+                    </SheetClose>
                   </>
                 )}
               </div>
@@ -152,24 +141,6 @@ export default function Header() {
           </Link>
 
           {/* DESKTOP MENU */}
-          {/* <nav className="hidden md:flex items-center gap-2 ml-6">
-            {menus.map((m) => {
-              const active = pathname === m.href;
-
-              return (
-                <Link
-                  key={m.href}
-                  href={m.href}
-                  className={`rounded-full px-3 py-2 text-sm transition ${active
-                    ? "bg-black text-white"
-                    : "text-zinc-600 hover:bg-zinc-100"
-                    }`}
-                >
-                  {m.label}
-                </Link>
-              );
-            })}
-          </nav> */}
           <nav className="hidden md:flex items-center gap-2 ml-6">
             {menus.map((m) => {
               const active = pathname === m.href;
@@ -190,12 +161,6 @@ export default function Header() {
 
             {user ? (
               <>
-                {/* <Link
-                  href="/admin/orders"
-                  className="rounded-full px-3 py-2 text-sm text-zinc-600 hover:bg-zinc-100"
-                >
-                  to Admin Page
-                </Link> */}
                 {role === "admin" && (
                   <Link
                     href="/admin/orders"
@@ -220,13 +185,6 @@ export default function Header() {
                 >
                   Login
                 </Link>
-
-                {/* <Link
-                  href="/register"
-                  className="rounded-full px-3 py-2 text-sm text-zinc-600 hover:bg-zinc-100"
-                >
-                  Register
-                </Link> */}
               </>
             )}
           </nav>
