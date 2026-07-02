@@ -107,7 +107,7 @@ export default function WebhooksPage() {
           <button
             key={st}
             onClick={() => setter(st as any)}
-            className={`px-3 py-1.5 rounded-lg text-xs font-medium transition-all ${current === st
+            className={`cursor-pointer px-3 py-1.5 rounded-lg text-xs font-medium transition-all ${current === st
               ? "bg-slate-800 text-white shadow-sm"
               : "bg-slate-100 text-slate-600 hover:bg-slate-200"
               }`}
