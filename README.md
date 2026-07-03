@@ -28,35 +28,29 @@
 Khách hàng
     │
     ▼
-Xem sản phẩm
+Product
     │
     ▼
-Thêm vào giỏ hàng
+OrderItem (Snapshot)
     │
     ▼
-Nhập thông tin + OTP
-    │
-    ▼
-Tạo đơn hàng
+Order
     │
     ├───────────────┐
     ▼               ▼
-Thanh toán QR    Thanh toán tiền mặt
-    │               │
-    ▼               ▼
-Webhook         Chờ Admin xác nhận
-(Đối soát QR)
-    │
-    ▼
-Đơn hàng đã thanh toán
-    │
-    ▼
-Admin xử lý đơn
-    │
-    ├───────────────┐
-    │               │
-    ▼               ▼
-Đang giao       Hủy đơn
-    │               │
-    ▼               ▼
-Đã giao      Cộng lại tồn kho
+Tiền mặt       QR Banking
+                    │
+                    ▼
+                Webhook
+                    │
+                    ▼
+         paymentStatus = paid
+                    │
+                    ▼
+            Admin xử lý đơn
+                    │
+         ┌──────────┴──────────┐
+         ▼                     ▼
+     Hoàn thành             Hủy đơn
+         │                     │
+         └────── Cập nhật Quantity ──────┘
