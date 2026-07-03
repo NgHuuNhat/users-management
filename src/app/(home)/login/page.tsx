@@ -50,8 +50,8 @@ export default function Login() {
                     <h1 className="text-3xl font-bold text-zinc-900">Đăng nhập</h1>
                 </div>
 
-                <input type="email" placeholder="Email" value={email} onChange={(e) => setEmail(e.target.value)} required className="w-full rounded-2xl bg-white px-5 py-4 outline-none shadow-sm" />
-                <input type="password" placeholder="Mật khẩu" value={password} onChange={(e) => setPassword(e.target.value)} required className="w-full rounded-2xl bg-white px-5 py-4 outline-none shadow-sm" />
+                <input type="email" placeholder="admin@gmail.com" value={email} onChange={(e) => setEmail(e.target.value)} required className="w-full rounded-2xl bg-white px-5 py-4 outline-none shadow-sm" />
+                <input type="password" placeholder="123456" value={password} onChange={(e) => setPassword(e.target.value)} required className="w-full rounded-2xl bg-white px-5 py-4 outline-none shadow-sm" />
 
                 <button
                     type="submit"

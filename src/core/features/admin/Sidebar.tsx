@@ -101,11 +101,9 @@ export default function Sidebar({
 
         {/* FOOTER */}
         <div className="mt-auto border-t border-slate-800 p-4 shrink-0">
-          <Link href="/">
-            <button onClick={handleLogout} className="w-full h-10 flex items-center justify-center cursor-pointer rounded-lg bg-slate-800 text-xs font-medium text-slate-300 hover:bg-red-600 hover:text-white transition">
-              Đăng xuất
-            </button>
-          </Link>
+          <button onClick={handleLogout} className="w-full h-10 flex items-center justify-center cursor-pointer rounded-lg bg-slate-800 text-xs font-medium text-slate-300 hover:bg-red-600 hover:text-white transition">
+            Đăng xuất
+          </button>
         </div>
       </aside>
     </>
