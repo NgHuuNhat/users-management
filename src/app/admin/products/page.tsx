@@ -12,6 +12,7 @@ export interface Product {
   categoryId: string;
   name: string;
   price: number;
+  initialQuantity: number;
   quantity: number;
   image: string;
   description: string;
@@ -30,6 +31,7 @@ export default function ProductsPage() {
     categoryId: "",
     name: "",
     price: 0,
+    initialQuantity: 0,
     quantity: 0,
     image: "",
     description: "",
@@ -108,6 +110,7 @@ export default function ProductsPage() {
         // Thêm sản phẩm mới (chèn thêm ngày tạo)
         await addDoc(collection(db, "products"), {
           ...payload,
+          initialQuantity: formData.initialQuantity,
           createdAt: new Date().toISOString(),
         });
       }
@@ -129,6 +132,7 @@ export default function ProductsPage() {
       categoryId: product.categoryId,
       name: product.name,
       price: product.price,
+      initialQuantity: product.initialQuantity,
       quantity: product.quantity,
       image: product.image,
       description: product.description,
@@ -196,7 +200,11 @@ export default function ProductsPage() {
                 <input name="categoryId" value={formData.categoryId} onChange={handleInputChange} className="w-full px-3 py-2 border rounded-lg text-sm focus:ring-2 focus:ring-blue-500 outline-none bg-slate-50 focus:bg-white" placeholder="ID danh mục" />
               </div>
               <div>
-                <label className="block text-xs font-semibold text-slate-500 mb-1">Số lượng tồn kho</label>
+                <label className="block text-xs font-semibold text-slate-500 mb-1">Số lượng nhập kho ban đầu</label>
+                <input type="number" name="initialQuantity" value={formData.initialQuantity === 0 && !formData.name ? "" : formData.initialQuantity} onChange={(e) => setFormData(p => ({ ...p, initialQuantity: parseInt(e.target.value) || 0 }))} className="w-full px-3 py-2 border rounded-lg text-sm focus:ring-2 focus:ring-blue-500 outline-none bg-slate-50 focus:bg-white" placeholder="0" min="0" />
+              </div>
+              <div>
+                <label className="block text-xs font-semibold text-slate-500 mb-1">Số lượng tồn kho hiện tại</label>
                 <input type="number" name="quantity" value={formData.quantity === 0 && !formData.name ? "" : formData.quantity} onChange={(e) => setFormData(p => ({ ...p, quantity: parseInt(e.target.value) || 0 }))} className="w-full px-3 py-2 border rounded-lg text-sm focus:ring-2 focus:ring-blue-500 outline-none bg-slate-50 focus:bg-white" placeholder="0" min="0" />
               </div>
             </div>
@@ -278,7 +286,9 @@ export default function ProductsPage() {
                 <tr>
                   <th className="px-4 py-3">Sản phẩm</th>
                   <th className="px-4 py-3">Thuộc tính</th>
-                  <th className="px-4 py-3 text-right">Kho</th>
+                  <th className="px-4 py-3 text-right">Số lượng nhập kho ban đầu</th>
+                  <th className="px-4 py-3 text-right">Số lượng tồn kho hiện tại</th>
+                  <th className="px-4 py-3 text-right">Số lượng đã bán</th>
                   <th className="px-4 py-3 text-right">Đơn giá</th>
                   <th className="px-4 py-3 text-center">Thao tác</th>
                 </tr>
@@ -314,7 +324,13 @@ export default function ProductsPage() {
                       </td>
 
                       <td className="px-4 py-4 text-right font-medium text-slate-600">
+                        {p.initialQuantity}
+                      </td>
+                      <td className="px-4 py-4 text-right font-medium text-slate-600">
                         {p.quantity}
+                      </td>
+                      <td className="px-4 py-4 text-right font-medium text-slate-600">
+                        {p.initialQuantity - p.quantity}
                       </td>
 
                       <td className="px-4 py-4 text-right font-bold text-blue-600 whitespace-nowrap">

@@ -28,7 +28,8 @@ export interface Product {
     categoryId: string;               // Thuộc danh mục nào
     name: string;                     // Tên sản phẩm (Ví dụ: "Áo Polo Classic - Đen - Size L")
     price: number;                    // Giá bán thực tế
-    quantity: number;                 // Số lượng tồn kho
+    initialQuantity?: number;          // Số lượng nhập kho ban đầu
+    quantity: number;                 // Số lượng tồn kho hiện tại
     image: string;                    // Ảnh đại diện chính
     description: string;              // Mô tả sản phẩm
     attributes: Record<string, string>; // Object chứa các Key-Value tự do (VD: { "Màu sắc": "Đen", "Size": "L", "Chất liệu": "Cotton" })
