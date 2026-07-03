@@ -25,32 +25,35 @@
 - Phù hợp với nhiều loại sản phẩm khác nhau mà không cần thay đổi cấu trúc cơ sở dữ liệu.
 - Dễ mở rộng khi phát sinh các yêu cầu mới.
 
-# Khách hàng
-#     │
-#     ▼
-# Product
-#     │
-#     ▼
-# OrderItem (Snapshot)
-#     │
-#     ▼
-# Order
-#     │
-#     ├───────────────┐
-#     ▼               ▼
-# Tiền mặt       QR Banking
-#                     │
-#                     ▼
-#                 Webhook
-#                     │
-#                     ▼
-#          paymentStatus = paid
-#                     │
-#                     ▼
-#             Admin xử lý đơn
-#                     │
-#          ┌──────────┴──────────┐
-#          ▼                     ▼
-#      Hoàn thành             Hủy đơn
-#          │                     │
-#          └─ Cập nhật Quantity ─┘
+## Quy trình xử lý đơn hàng
+```
+Khách hàng
+    │
+    ▼
+Product
+    │
+    ▼
+OrderItem (Snapshot)
+    │
+    ▼
+Order
+    │
+    ├───────────────┐
+    ▼               ▼
+Tiền mặt       QR Banking
+                    │
+                    ▼
+                Webhook
+                    │
+                    ▼
+         paymentStatus = paid
+                    │
+                    ▼
+            Admin xử lý đơn
+                    │
+         ┌──────────┴──────────┐
+         ▼                     ▼
+     Hoàn thành             Hủy đơn
+         │                     │
+         └─ Cập nhật Quantity ─┘
+```
