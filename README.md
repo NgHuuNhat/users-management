@@ -25,18 +25,38 @@
 - Phù hợp với nhiều loại sản phẩm khác nhau mà không cần thay đổi cấu trúc cơ sở dữ liệu.
 - Dễ mở rộng khi phát sinh các yêu cầu mới.
 
-Category
+Khách hàng
     │
-    └───< Product (attributes, quantity)
-                 │
-                 └───< OrderItem (Snapshot)
-                            │
-                            ▼
-                          Order
-                            │
-                 ┌──────────┴──────────┐
-                 ▼                     ▼
-             Customer             Webhook
-                               (Đối soát QR)
-
-User (Quản trị Admin)
+    ▼
+Xem sản phẩm
+    │
+    ▼
+Thêm vào giỏ hàng
+    │
+    ▼
+Nhập thông tin + OTP
+    │
+    ▼
+Tạo đơn hàng
+    │
+    ├───────────────┐
+    ▼               ▼
+Thanh toán QR    Thanh toán tiền mặt
+    │               │
+    ▼               ▼
+Webhook         Chờ Admin xác nhận
+(Đối soát QR)
+    │
+    ▼
+Đơn hàng đã thanh toán
+    │
+    ▼
+Admin xử lý đơn
+    │
+    ├───────────────┐
+    │               │
+    ▼               ▼
+Đang giao       Hủy đơn
+    │               │
+    ▼               ▼
+Đã giao      Cộng lại tồn kho
