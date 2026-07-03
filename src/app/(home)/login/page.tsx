@@ -27,14 +27,16 @@ export default function Login() {
 
             await fetch('/api/auth/set-role', {
                 method: 'POST',
+                headers: {
+                    'Content-Type': 'application/json',
+                },
+                credentials: 'include',
                 body: JSON.stringify({ role })
             });
 
             // Toast thành công
             toast.success("Đăng nhập thành công!");
-
-            router.push(role === 'admin' ? '/admin/orders' : '/');
-            router.refresh();
+            router.replace(role === "admin" ? "/admin/orders" : "/");
         } catch {
             // Toast lỗi
             toast.error("Email hoặc mật khẩu không chính xác!");
