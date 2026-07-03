@@ -1,77 +1,42 @@
-# project: users-management
-# Task:
-User Register/Update:
- create account:
- - email (validate email)
- - passWord (validate pw)
- - passWordConfirm (validate pwCf)
- - capchaCode (8 character) (validate capcha)
+# Chức năng nổi bật
 
- login/logout:
- - email
- - passWord
- - capchaCode (8 character)
+### 1. Quy trình mua hàng tối ưu chuyển đổi
+- Toàn bộ thao tác mua hàng diễn ra trên một màn hình, không cần chuyển trang.
+- Thêm vào giỏ hàng, nhập thông tin, xác minh OTP và thanh toán được thực hiện liên tục với ít thao tác nhất.
+- Giúp rút ngắn quy trình đặt hàng và tăng tỷ lệ chuyển đổi.
 
- update info:
- - avatar
- - email
- - firstName
- - lastName
- - phone
- - address
- - cccd
- - socialsFB
- - socialsTW
+### 2. Tra cứu đơn hàng an toàn
+- Không cần đăng nhập hoặc tạo tài khoản.
+- Khách hàng tra cứu đơn hàng bằng email và mã OTP.
+- Đảm bảo chỉ chủ sở hữu mới có thể xem thông tin đơn hàng.
 
-List Users:
- - show: 
- - avatar,
- - email
- - firstName
- - 12 users/page
- - pc: 4 users/row
- - tablet: 3 users/row
- - mobile: 2 user/row
- - scroll down for load more
+### 3. Thanh toán linh hoạt, đối soát tự động
+- Hỗ trợ thanh toán tiền mặt hoặc chuyển khoản QR.
+- Tự động đối soát giao dịch ngân hàng và khớp đúng đơn hàng theo thời gian thực.
+- Cập nhật trạng thái thanh toán mà không cần thao tác thủ công.
 
-Detail User:
- - avatar
- - email
- - firstName
- - lastName
- - phone
- - address
- - cccd
- - socialsFB
- - socialsTW
+### 4. Quản lý tồn kho theo thời gian thực
+- Tự động tăng hoặc giảm số lượng tồn kho theo trạng thái đơn hàng.
+- Đồng bộ tồn kho khi đặt hàng, hủy đơn, hoàn đơn hoặc cập nhật trạng thái giao hàng.
+- Giảm sai lệch tồn kho và hạn chế bán vượt số lượng.
 
-# Tech Stack:
-## Frontend
-* Next.js (App Router)
-* ReactJS
-* TypeScript
-* TailwindCSS
-* shadcn/ui
+### 5. Cấu trúc sản phẩm linh hoạt
+- Cho phép thêm không giới hạn các thuộc tính sản phẩm (ví dụ: Màu sắc, Size, Chất liệu, Dung lượng...).
+- Phù hợp với nhiều loại sản phẩm khác nhau mà không cần thay đổi cấu trúc cơ sở dữ liệu.
+- Dễ mở rộng khi phát sinh các yêu cầu mới.
 
-## Form & Validation
-* React Hook Form
-* Zod
+Category
+    │
+    └───< Product (attributes, quantity)
+                 │
+                 └───< OrderItem (Snapshot)
+                            │
+                            ▼
+                          Order
+                            │
+                 ┌──────────┴──────────┐
+                 ▼                     ▼
+             Customer             Webhook
+                               (Đối soát QR)
 
-## State Management
-* Zustand
-* TanStack Query
-
-## Backend & Database
-* Firebase Auth
-* Firestore Database
-* Firebase Storage
-
-## Optimization & Performance
-* React.memo
-* useMemo
-* useCallback
-* Dynamic Import
-* Infinite Scroll
-* Debounce
-* Lazy Loading
-* Skeleton Loading
+User (Quản trị Admin)
