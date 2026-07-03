@@ -53,4 +53,4 @@ Tiền mặt       QR Banking
          ▼                     ▼
      Hoàn thành             Hủy đơn
          │                     │
-         └────── Cập nhật Quantity ──────┘
+         └─ Cập nhật Quantity ─┘
