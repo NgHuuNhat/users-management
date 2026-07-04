@@ -73,10 +73,11 @@ export interface User {
     id: string                      // PK
     email: string                   // Email
     name: string                    // Họ tên
-    phone: string                   // Số điện thoại
-    address: string                 // Địa chỉ
-    role: 'user' | 'admin'          // Vai trò
-    isActive: boolean               // Trạng thái hoạt động
+    phone?: string                   // Số điện thoại
+    address?: string                 // Địa chỉ
+    role?: 'user' | 'admin'          // Vai trò
+    isActive?: boolean               // Trạng thái hoạt động
+    createdAt?: any
 }
 
 export interface Webhook {
