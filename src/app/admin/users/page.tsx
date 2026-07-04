@@ -93,7 +93,7 @@ export default function UsersPage() {
               <thead className="bg-slate-50 border-b text-slate-500 uppercase text-[10px] font-bold">
                 <tr>
                   <th className="px-4 py-3">ID</th>
-                  <th className="px-4 py-3">Người dùng</th>
+                  <th className="px-4 py-3">Name</th>
                   <th className="px-4 py-3 hidden md:table-cell">Phone</th>
                   <th className="px-4 py-3 hidden md:table-cell">Email</th>
                   <th className="px-4 py-3 text-center">Vai trò</th>
