@@ -94,9 +94,10 @@ export default function UsersPage() {
                 <tr>
                   <th className="px-4 py-3">ID</th>
                   <th className="px-4 py-3">Người dùng</th>
+                  <th className="px-4 py-3 hidden md:table-cell">Phone</th>
                   <th className="px-4 py-3 hidden md:table-cell">Email</th>
                   <th className="px-4 py-3 text-center">Vai trò</th>
-                  <th className="px-4 py-3 text-center">Ngày tạo</th>
+                  {/* <th className="px-4 py-3 text-center">Ngày tạo</th> */}
                   <th className="px-4 py-3 text-center">Thao tác</th>
                 </tr>
               </thead>
