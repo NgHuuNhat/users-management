@@ -117,7 +117,7 @@ export default function OrderModal({
                     <img src={item.image} alt={item.name} className="w-9 h-9 md:w-10 md:h-10 object-cover rounded-lg bg-neutral-50 border border-neutral-100 flex-shrink-0" />
                     <div className="min-w-0">
                       <p className="font-medium text-neutral-800 truncate">{item.name}</p>
-                      <p className="text-[10px] md:text-[11px] text-neutral-400 font-mono">SKU: {item.productId}</p>
+                      <p className="text-[10px] md:text-[11px] text-neutral-400 font-mono">Mã SP: {formatShortId(item.productId)}</p>
                     </div>
                   </div>
                   <div className="text-right flex-shrink-0">

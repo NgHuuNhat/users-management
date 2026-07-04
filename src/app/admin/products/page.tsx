@@ -6,6 +6,7 @@ import { collection, addDoc, onSnapshot, query, orderBy, doc, updateDoc, deleteD
 import { db } from "@/core/services/firebase";
 import { NumericFormat } from "react-number-format";
 import { Plus, Trash2, Tag, ListPlus, Edit, X } from "lucide-react";
+import { formatShortId } from "@/core/shared/format-short-id";
 
 export interface Product {
   id: string;
@@ -284,11 +285,12 @@ export default function ProductsPage() {
             <table className="w-full text-sm text-left">
               <thead className="bg-slate-50 text-slate-500 uppercase text-[10px] font-bold border-b">
                 <tr>
+                  <th className="px-4 py-3 whitespace-nowrap">Mã SP</th>
                   <th className="px-4 py-3">Sản phẩm</th>
                   <th className="px-4 py-3">Thuộc tính</th>
-                  <th className="px-4 py-3 text-right">Số lượng nhập kho ban đầu</th>
-                  <th className="px-4 py-3 text-right">Số lượng tồn kho hiện tại</th>
-                  <th className="px-4 py-3 text-right">Số lượng đã bán</th>
+                  <th className="px-4 py-3 text-right">Nhập kho</th>
+                  <th className="px-4 py-3 text-right">Tồn kho</th>
+                  <th className="px-4 py-3 text-right">Đã bán</th>
                   <th className="px-4 py-3 text-right">Đơn giá</th>
                   <th className="px-4 py-3 text-center">Thao tác</th>
                 </tr>
@@ -301,6 +303,10 @@ export default function ProductsPage() {
                 ) : (
                   products.map((p) => (
                     <tr key={p.id} className="hover:bg-slate-50/50 transition-colors">
+                      <td className="whitespace-nowrap px-4 py-4 font-medium text-slate-600">
+                        <p className="whitespace-nowrap text-[10px] text-blue-500 font-medium mt-1">{formatShortId(p.id)}</p>
+                      </td>
+
                       <td className="px-4 py-4 flex gap-3 min-w-[200px]">
                         <img src={p.image} className="w-12 h-12 rounded-lg object-cover border bg-slate-100 shrink-0" alt={p.name} onError={(e) => { (e.target as HTMLImageElement).src = "https://placehold.co/150x150?text=No+Image"; }} />
                         <div>
