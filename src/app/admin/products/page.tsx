@@ -7,6 +7,7 @@ import { db } from "@/core/services/firebase";
 import { NumericFormat } from "react-number-format";
 import { Plus, Trash2, Tag, ListPlus, Edit, X } from "lucide-react";
 import { formatShortId } from "@/core/shared/format-short-id";
+import { formatDate } from "@/core/shared/format-date";
 
 export interface Product {
   id: string;
@@ -305,6 +306,7 @@ export default function ProductsPage() {
                     <tr key={p.id} className="hover:bg-slate-50/50 transition-colors">
                       <td className="whitespace-nowrap px-4 py-4 font-medium text-slate-600">
                         <p className="whitespace-nowrap text-[10px] text-blue-500 font-medium mt-1">{formatShortId(p.id)}</p>
+                        {/* <p className="whitespace-break-spaces text-[10px] text-blue-500 font-medium mt-1">{formatDate(p.createdAt)}</p> */}
                       </td>
 
                       <td className="px-4 py-4 flex gap-3 min-w-[200px]">
@@ -312,6 +314,8 @@ export default function ProductsPage() {
                         <div>
                           <p className="font-bold text-slate-800 line-clamp-2">{p.name}</p>
                           <p className="text-[10px] text-blue-500 font-medium mt-1">DM: {p.categoryId}</p>
+                          <p className="whitespace-break-spaces text-[10px] text-blue-500 font-medium mt-1">{formatDate(p.createdAt)}</p>
+
                         </div>
                       </td>
 

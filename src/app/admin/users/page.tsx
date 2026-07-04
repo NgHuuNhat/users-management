@@ -103,22 +103,27 @@ export default function UsersPage() {
               <tbody className="divide-y">
                 {users.map((u: User) => (
                   <tr key={u.id} className="hover:bg-slate-50">
-                    <td className="px-4 py-4 hidden md:table-cell text-slate-600">
-                      <p className="text-[10px] text-blue-500 font-medium">{formatShortId(u.id)}</p>
+                    <td className="whitespace-nowrap px-4 py-4 hidden md:table-cell text-slate-600">
+                      <p className="whitespace-nowrap text-[10px] text-blue-500 font-medium">{formatShortId(u.id)}</p>
+                      {/* <p className="whitespace-break-spaces text-[10px] text-blue-500 font-medium">{formatDate(u.createdAt)}</p> */}
                     </td>
                     <td className="px-4 py-4 flex items-center gap-3">
                       <div className="w-8 h-8 rounded-full bg-blue-100 flex items-center justify-center text-blue-600 font-bold text-xs"><UserIcon size={14} /></div>
-                      <div className="font-medium text-slate-800">{u.name}</div>
+                      <div>
+                        <div className="font-medium text-slate-800">{u.name}</div>
+                        <p className="whitespace-break-spaces text-[10px] text-blue-500 font-medium">{formatDate(u.createdAt)}</p>
+                      </div>
                     </td>
+                    <td className="px-4 py-4 hidden md:table-cell text-slate-600">{u.phone}</td>
                     <td className="px-4 py-4 hidden md:table-cell text-slate-600">{u.email}</td>
                     <td className="px-4 py-4 text-center">
                       <span className={`px-2 py-1 rounded text-[10px] ${u.role === 'admin' ? 'bg-blue-50 text-blue-700' : 'bg-slate-100'}`}>
                         {u.role}
                       </span>
                     </td>
-                    <td className="px-4 py-4 hidden md:table-cell text-slate-600">
+                    {/* <td className="px-4 py-4 hidden md:table-cell text-slate-600">
                       <p className="text-[10px] text-blue-500 font-medium text-center">{formatDate(u.createdAt)}</p>
-                    </td>
+                    </td> */}
                     <td className="px-4 py-4">
                       <div className="flex items-center justify-center gap-2">
                         <button onClick={() => handleEdit(u)} className="p-1.5 text-blue-500 hover:bg-blue-50 rounded"><Edit size={16} /></button>
