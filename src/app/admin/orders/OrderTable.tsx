@@ -168,7 +168,7 @@ export default function OrderTable({
                                             </td>
                                             <td className="py-4 px-6 text-right whitespace-nowrap">
                                                 <button onClick={() => setSelectedOrder(order)} className="p-1 px-2.5 cursor-pointer bg-gray-100 rounded-2xl text-blue-600 font-semibold text-xs hover:bg-blue-600 hover:text-white transition-all">
-                                                    Xem →
+                                                    Thao tác →
                                                 </button>
                                             </td>
                                         </tr>
@@ -202,7 +202,7 @@ export default function OrderTable({
                                             </div>
                                             {/* Nút Xem cho mobile nhỏ */}
                                             <button onClick={() => setSelectedOrder(order)} className="md:hidden bg-blue-50 text-blue-600 px-2.5 py-1 rounded-lg text-xs font-bold shrink-0">
-                                                Xem →
+                                                Thao tác →
                                             </button>
                                         </div>
 
@@ -252,7 +252,7 @@ export default function OrderTable({
                                         {/* Nút Xem bản to cho iPad và Laptop dưới 1440px */}
                                         <div className="hidden md:flex justify-end mt-3">
                                             <button onClick={() => setSelectedOrder(order)} className="bg-slate-100 hover:bg-blue-50 text-blue-600 px-4 py-1.5 rounded-xl text-xs font-bold transition-colors w-full text-center">
-                                                Chi tiết đơn hàng →
+                                                Thao tác →
                                             </button>
                                         </div>
                                     </div>
