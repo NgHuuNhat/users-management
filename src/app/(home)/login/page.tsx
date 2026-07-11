@@ -36,7 +36,8 @@ export default function Login() {
 
             // Toast thành công
             toast.success("Đăng nhập thành công!");
-            router.replace(role === "admin" ? "/admin/orders" : "/");
+            // router.replace(role === "admin" ? "/admin/orders" : "/");
+            window.location.href = role === "admin" ? "/admin/orders" : "/";
         } catch {
             // Toast lỗi
             toast.error("Email hoặc mật khẩu không chính xác!");
