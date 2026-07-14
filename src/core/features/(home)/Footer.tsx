@@ -78,7 +78,7 @@ export default function Footer() {
         <div className="flex flex-col gap-2 text-center sm:flex-row sm:items-center sm:justify-between sm:text-left">
 
           <p className="text-xs text-zinc-500">
-            © {new Date().getFullYear()} My Store. All rights reserved.
+            © {new Date().getFullYear()} My Store. All rights reserved. Made by nhat200901@gmail.com
           </p>
 
           <p className="text-xs text-zinc-400">
