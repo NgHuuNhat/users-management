@@ -51,6 +51,8 @@ export default function Login() {
             <form onSubmit={handleLogin} className="w-full max-w-sm space-y-4">
                 <div className="mb-8 text-center">
                     <h1 className="text-3xl font-bold text-zinc-900">Đăng nhập</h1>
+                </div>
+                <div>
                     <p>email: admin@gmail.com</p>
                     <p>pass: 123456</p>
                 </div>
