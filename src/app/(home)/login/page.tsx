@@ -21,6 +21,10 @@ export default function Login() {
         try {
             const userCredential = await signInWithEmailAndPassword(auth, email, password);
             const user = userCredential.user;
+            // Lấy ID Token
+            const idToken = await user.getIdToken();
+            localStorage.setItem('accessToken', idToken);
+            console.log('idToken', idToken);
 
             const userDoc = await getDoc(doc(db, "users", user.uid));
             const role = userDoc.data()?.role;

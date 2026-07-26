@@ -1,4 +1,4 @@
-// export interface Product {
+or// export interface Product {
 //     id: string                      // PK
 //     name: string                    // Tên sản phẩm
 //     price: number | null            // Giá bán
